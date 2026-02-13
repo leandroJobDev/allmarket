@@ -19,7 +19,6 @@ O **AllMarket** é uma API robusta desenvolvida em Go, projetada para gerenciar,
 * **Web Scraping:** [GoQuery](https://www.google.com/search?q=https://github.com/PuerkitoBio/goquery) para parsing de HTML e XML da SEFAZ.
 * **Frontend:** HTML5, CSS3 (Bootstrap 5) e JavaScript Assíncrono (Fetch API).
 * **Arquitetura:** Clean Architecture para separação de responsabilidades.
-* **Ambiente de Desenvolvimento:** BigLinux (Base Arch Linux).
 
 ---
 
