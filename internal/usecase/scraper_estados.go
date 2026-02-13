@@ -35,18 +35,29 @@ func ScraperPadraoNacional(urlNota string) (entity.NotaFiscal, error) {
 
 // --- FUNÇÕES DE APOIO (Módulos) ---
 
-func obterDocumento(url string) (*goquery.Document, error) {
-	client := &http.Client{Timeout: 30 * time.Second}
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("User-Agent", "Mozilla/5.0")
+func obterDocumento(input string) (*goquery.Document, error) {
+	input = strings.TrimSpace(input)
 
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("falha na conexão: %v", err)
+	// Se for uma URL (começa com http), faz o download
+	if strings.HasPrefix(input, "http") {
+		client := &http.Client{Timeout: 30 * time.Second}
+		req, _ := http.NewRequest("GET", input, nil)
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+
+		res, err := client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("falha na conexão: %v", err)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != 200 {
+			return nil, fmt.Errorf("erro na SEFAZ: status %d", res.StatusCode)
+		}
+		return goquery.NewDocumentFromReader(res.Body)
 	}
-	defer res.Body.Close()
 
-	return goquery.NewDocumentFromReader(res.Body)
+	// SE NÃO FOR URL: Trata como o HTML que você colou no textarea
+	return goquery.NewDocumentFromReader(strings.NewReader(input))
 }
 
 func extrairChave(texto string) string {

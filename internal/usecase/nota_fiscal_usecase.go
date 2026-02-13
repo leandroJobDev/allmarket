@@ -2,31 +2,24 @@ package usecase
 
 import (
 	"allmarket/internal/entity"
-	"fmt"
 	"strings"
 )
 
-func ProcessarURL(url string) (entity.NotaFiscal, error) {
+func ProcessarURL(input string) (entity.NotaFiscal, error) {
+	// Se o input NÃO começar com http, assume que é o HTML colado e processa direto
+	if !strings.HasPrefix(input, "http") {
+		return ScraperPadraoNacional(input)
+	}
+
 	switch {
+	case strings.Contains(input, "sef.sc.gov.br"),
+		strings.Contains(input, "sefaz.pe.gov.br"),
+		strings.Contains(input, "sefaz.pb.gov.br"):
+		return ScraperPadraoNacional(input)
 
-	// --- GRUPO 1: ESTADOS NO PADRÃO (XML ou Tabela #tabResult) ---
-	// Aqui você coloca todos os estados que o ScraperPadraoNacional já resolve.
-	case strings.Contains(url, "sef.sc.gov.br"),
-		strings.Contains(url, "sefaz.pe.gov.br"),
-		strings.Contains(url, "sefaz.pb.gov.br"): // Exemplo: Paraíba também costuma seguir
-		return ScraperPadraoNacional(url)
-
-	// --- GRUPO 2: ESTADOS FORA DO PADRÃO (Customizados) ---
-	// Se você descobrir que o estado X tem um site totalmente maluco,
-	// você cria um caso específico para ele aqui.
-	case strings.Contains(url, "portaldaestatistica.exemplo.gov.br"):
-		// Exemplo de como você chamaria um scraper único:
-		// return ScraperCustomizadoEstadoX(url)
-		return entity.NotaFiscal{}, fmt.Errorf("este estado possui um sistema customizado que ainda não foi mapeado")
-
-	// --- GRUPO 3: CASO DE EMERGÊNCIA / DESCONHECIDO ---
 	default:
-		return entity.NotaFiscal{}, fmt.Errorf("URL não reconhecida. Verifique se o link da nota está correto")
+		// Em vez de dar erro, tenta processar mesmo assim (pode ser um link de outro estado)
+		return ScraperPadraoNacional(input)
 	}
 }
 
