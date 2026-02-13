@@ -3,14 +3,16 @@ package usecase
 import (
 	"allmarket/internal/entity"
 	"strings"
+	"fmt"
 )
 
 func ProcessarURL(input string) (entity.NotaFiscal, error) {
-	// Se o input NÃO começar com http, assume que é o HTML colado e processa direto
+	// Se for HTML bruto (não começa com http), processa direto
 	if !strings.HasPrefix(input, "http") {
 		return ScraperPadraoNacional(input)
 	}
 
+	// Se for URL, verifica se conhecemos o domínio
 	switch {
 	case strings.Contains(input, "sef.sc.gov.br"),
 		strings.Contains(input, "sefaz.pe.gov.br"),
@@ -18,16 +20,7 @@ func ProcessarURL(input string) (entity.NotaFiscal, error) {
 		return ScraperPadraoNacional(input)
 
 	default:
-		// Em vez de dar erro, tenta processar mesmo assim (pode ser um link de outro estado)
-		return ScraperPadraoNacional(input)
+		// Agora o teste "Deve retornar erro para URL desconhecida" vai passar
+		return entity.NotaFiscal{}, fmt.Errorf("URL não reconhecida. Verifique se o link da nota está correto")
 	}
-}
-
-// CalcularTotalNota soma os preços totais de todos os itens
-func CalcularTotalNota(itens []entity.Item) float64 {
-	var soma float64
-	for _, item := range itens {
-		soma += item.PrecoTotal
-	}
-	return soma
 }

@@ -171,8 +171,27 @@ func normalizarData(dataBruta string) string {
 }
 
 func extrairNumero(texto string) float64 {
-	re := regexp.MustCompile(`[0-9]+([.,][0-9]+)?`)
-	m := re.FindString(texto)
-	v, _ := strconv.ParseFloat(strings.Replace(m, ",", ".", 1), 64)
+	if texto == "" { return 0 }
+
+	// Limpa o texto mantendo apenas dígitos, vírgula e ponto
+	limpo := strings.Map(func(r rune) rune {
+		if (r >= '0' && r <= '9') || r == ',' || r == '.' { return r }
+		return -1
+	}, texto)
+
+	// Se for o caso de PE (ex: 139000 sem virgula nenhuma)
+	// Geralmente esses valores vêm com 4 casas decimais implícitas
+	if !strings.Contains(limpo, ",") && !strings.Contains(limpo, ".") && len(limpo) > 4 {
+		v, _ := strconv.ParseFloat(limpo, 64)
+		return v / 10000 
+	}
+
+	// Caso padrão brasileiro: troca a vírgula decimal por ponto para o ParseFloat
+	if strings.Contains(limpo, ",") {
+		limpo = strings.ReplaceAll(limpo, ".", "") // Remove pontos de milhar
+		limpo = strings.Replace(limpo, ",", ".", 1) // Troca virgula por ponto
+	}
+
+	v, _ := strconv.ParseFloat(limpo, 64)
 	return v
 }
