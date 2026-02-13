@@ -1,13 +1,26 @@
 package entity
 
-type Item struct {
-	Nome       string  `json:"nome"`
-	Quantidade float64 `json:"quantidade"`
-	Preco      float64 `json:"preco"`
+type Estabelecimento struct {
+	Nome      string `json:"nome"`
+	CNPJ      string `json:"cnpj"`
+	Endereco  string `json:"endereco"`
 }
 
 type NotaFiscal struct {
-	Mercado string  `json:"mercado"`
-	Itens   []Item  `json:"itens"`
-	Total   float64 `json:"total"`
+	Chave          string          `json:"chave"`
+	Numero         string          `json:"numero"`
+	Serie          string          `json:"serie"`
+	DataEmissao    string          `json:"data_emissao"`
+	Estabelecimento Estabelecimento `json:"estabelecimento"`
+	Itens          []Item          `json:"itens"`
+	ValorTotal     float64         `json:"valor_total"`
+}
+
+type Item struct {
+	Nome          string  `json:"nome"`
+	Codigo        string  `json:"codigo"`
+	Quantidade    float64 `json:"quantidade"`
+	Unidade       string  `json:"unidade"`
+	PrecoUnitario float64 `json:"preco_unitario"`
+	PrecoTotal    float64 `json:"preco_total"`
 }

@@ -1,51 +1,54 @@
-package main // 1. Define que este é o ponto de entrada da aplicação
+package main
 
 import (
-	"allmarket/internal/usecase" // 2. Importa sua lógica de negócio (Usecase)
-	"github.com/gin-gonic/gin"   // 3. Importa o framework web
-	"net/http"                   // 4. Pacote padrão do Go para códigos de status (200, 404, etc)
+	"allmarket/internal/usecase"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-// 5. Define o formato do JSON que o seu servidor espera receber
-type RequisicaoScan struct {
-	URL string `json:"url" binding:"required"`
+// Requisicao mapeia o JSON enviado pelo seu index.html
+type Requisicao struct {
+	URL string `json:"url"`
 }
 
 func main() {
-	// 6. Cria uma instância padrão do Gin (com logs e recuperação de erros) - Roteamento
-	r := gin.Default()
+	// Cria o roteador do Gin
+	router := gin.Default()
 
-	// 7. Define uma rota do tipo POST no endereço "/scan"
-	r.POST("/scan", func(c *gin.Context) {
-		
-		// 8. Declara uma variável baseada na nossa struct
-		var input RequisicaoScan
+	// Middleware de CORS: Essencial para que o navegador (seu index.html)
+	// consiga falar com o servidor Go sem ser bloqueado por segurança.
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-		// 9. O "ShouldBindJSON" tenta ler o corpo da requisição e preencher a variável 'input'
-		// Se o JSON estiver errado ou faltar a URL, ele entra no if
-		if err := c.ShouldBindJSON(&input); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"erro": "Link inválido"})
-			return // Interrompe a execução aqui
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
 		}
+		c.Next()
+	})
 
-		// 10. Chama a função que criamos lá no internal/usecase
-		// Passamos o link que veio no JSON (input.URL)
-		resultado, err := usecase.ProcessarLink(input.URL)
-		
-		// 11. Se o Usecase devolver um erro, avisamos o cliente (422 Unprocessable Entity)
-		if err != nil {
-			c.JSON(http.StatusUnprocessableEntity, gin.H{"erro": err.Error()})
+	// Rota principal de processamento
+	router.POST("/processar", func(c *gin.Context) {
+		var req Requisicao
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"erro": "JSON inválido"})
 			return
 		}
 
-		// 12. Se tudo deu certo, envia a resposta final com Status 200 (OK)
-		c.JSON(http.StatusOK, gin.H{
-			"status": "sucesso",
-			"mensagem": resultado,
-			"link_recebido": input.URL,
-		})
+		nota, err := usecase.ProcessarURL(req.URL)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"erro": err.Error()})
+			return
+		}
+
+		// Retorna o objeto NotaFiscal completo (com estabelecimento, chave, itens...)
+		c.JSON(http.StatusOK, nota)
 	})
 
-	// 13. Liga o servidor na porta 8080
-	r.Run(":8080")
+	// Inicia o servidor na porta 8080
+	// Você pode acessar em http://localhost:8080
+	router.Run(":8080")
 }
