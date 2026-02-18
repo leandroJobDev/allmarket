@@ -2,25 +2,27 @@ package usecase
 
 import (
 	"allmarket/internal/entity"
-	"strings"
 	"fmt"
+	"strings"
 )
 
 func ProcessarURL(input string) (entity.NotaFiscal, error) {
-	// Se for HTML bruto (não começa com http), processa direto
+	input = strings.TrimSpace(input)
+
+	// Validação estrita: Agora só aceitamos links
 	if !strings.HasPrefix(input, "http") {
-		return ScraperPadraoNacional(input)
+		return entity.NotaFiscal{}, fmt.Errorf("por favor, insira um link válido da nota fiscal (URL)")
 	}
 
-	// Se for URL, verifica se conhecemos o domínio
+	// Roteamento por domínio da SEFAZ
 	switch {
-	case strings.Contains(input, "sef.sc.gov.br"),
-		strings.Contains(input, "sefaz.pe.gov.br"),
-		strings.Contains(input, "sefaz.pb.gov.br"):
+	case strings.Contains(input, "sef.sc.gov.br"),   // Santa Catarina
+		 strings.Contains(input, "sefaz.pe.gov.br"),   // Pernambuco
+		 strings.Contains(input, "sefaz.pb.gov.br"),   // Paraíba
+		 strings.Contains(input, "fazenda.sp.gov.br"): // São Paulo (exemplo)
 		return ScraperPadraoNacional(input)
 
 	default:
-		// Agora o teste "Deve retornar erro para URL desconhecida" vai passar
-		return entity.NotaFiscal{}, fmt.Errorf("URL não reconhecida. Verifique se o link da nota está correto")
+		return entity.NotaFiscal{}, fmt.Errorf("esta URL da SEFAZ ainda não é suportada")
 	}
 }

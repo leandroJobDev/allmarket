@@ -1,160 +1,201 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AllMarket - Extrator de Notas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { background-color: #f8f9fa; }
-        .card-nf { border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .header-custom { background: #2c3e50; color: white; border-radius: 15px 15px 0 0; }
-        .total-badge { font-size: 1.5rem; background: #198754; }
-        #resultadoContainer { display: none; }
-    </style>
+    <title>AllMarket - Gestor de Notas Fiscais</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="text-center mb-4">
-                <h1 class="display-5 fw-bold text-success"><i class="fas fa-shopping-cart"></i> AllMarket</h1>
-                <p class="text-muted">Extraia dados de notas fiscais (SEFAZ) instantaneamente</p>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8 text-gray-800">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-5xl font-black text-blue-600 mb-2">AllMarket</h1>
+            <p class="text-gray-500 text-lg">Seu extrator de dados NoSQL inteligente</p>
+        </header>
+
+        <div class="bg-white p-6 rounded-2xl shadow-xl mb-8">
+            <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">URL do QR Code da
+                Nota</label>
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="urlNota" placeholder="https://www.nfe.fazenda.gov.br/portal/consulta..."
+                    class="flex-1 p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all">
+                <button onclick="processarNota()" id="btnProcessar"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-10 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:bg-gray-400">
+                    PROCESSAR
+                </button>
             </div>
+            <div id="statusMsg" class="mt-6 hidden p-4 rounded-xl text-center font-bold border-2 animate-pulse"></div>
+        </div>
 
-            <div class="card card-nf mb-4">
-                <div class="card-body p-4">
-                    <h5 class="card-title mb-3"><i class="fas fa-paste text-success"></i> Entrada de Dados</h5>
-                    <p class="small text-muted">Cole a URL da nota ou o HTML completo (Ctrl+U na página da nota).</p>
-                    <textarea id="htmlInput" class="form-control mb-3" rows="5" placeholder="https://... ou <html>..."></textarea>
-                    <button onclick="enviarParaAPI()" class="btn btn-success btn-lg w-100 fw-bold">
-                        <i class="fas fa-magic"></i> Processar Nota Fiscal
-                    </button>
-                    <div id="loading" class="text-center mt-3" style="display:none;">
-                        <div class="spinner-border text-success" role="status"></div>
-                        <span class="ms-2">Buscando dados na API Go...</span>
+        <div id="resultado" class="hidden space-y-6">
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-t-8 border-blue-600 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <svg width="100" height="100" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                    </svg>
+                </div>
+                <div class="relative z-10">
+                    <h2 id="estNome" class="text-3xl font-black text-gray-900 leading-tight"></h2>
+                    <p id="estCnpj" class="text-blue-500 font-mono font-bold mt-1"></p>
+                    <p id="estEndereco" class="text-gray-500 mt-2 italic"></p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-100">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold text-gray-400 block">Chave de Acesso</span>
+                            <code id="notaChave" class="text-xs bg-gray-50 p-1 rounded text-gray-600"></code>
+                        </div>
+                        <div class="text-right md:text-left">
+                            <span class="text-[10px] uppercase font-bold text-gray-400 block">Dados da Emissão</span>
+                            <p class="text-sm font-bold">Data: <span id="notaData" class="text-gray-700"></span></p>
+                            <p class="text-sm font-bold">Nº Nota: <span id="notaNumero" class="text-gray-700"></span>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div id="resultadoContainer">
-                <div class="card card-nf">
-                    <div class="card-header header-custom p-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 id="resNome" class="mb-0 text-uppercase">NOME DO ESTABELECIMENTO</h3>
-                                <small id="resCNPJ" class="opacity-75"></small>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge bg-light text-dark shadow-sm p-2" id="resChave"></span>
-                            </div>
-                        </div>
-                    </div>
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-blue-50 text-blue-900">
+                        <tr>
+                            <th class="p-5 font-black uppercase text-xs">Produto</th>
+                            <th class="p-5 text-center font-black uppercase text-xs">Qtd</th>
+                            <th class="p-5 text-right font-black uppercase text-xs">Preço Un.</th>
+                            <th class="p-5 text-right font-black uppercase text-xs">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaItens" class="divide-y divide-gray-100">
+                    </tbody>
+                </table>
+            </div>
 
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4">Descrição do Produto</th>
-                                        <th>Qtd.</th>
-                                        <th>Un.</th>
-                                        <th>Preço Unit.</th>
-                                        <th class="pe-4 text-end">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="corpoTabela">
-                                    </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="card-footer bg-white p-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted small">Processado via AllMarket API</span>
-                            <div class="total-badge badge rounded-pill px-4 py-2">
-                                <small class="fw-normal">TOTAL </small>
-                                <span id="resTotal">R$ 0,00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="bg-gray-900 text-white p-8 rounded-2xl shadow-2xl flex justify-between items-center">
+                <span class="text-xl font-bold opacity-70">VALOR TOTAL:</span>
+                <span id="valorTotal" class="text-5xl font-black text-green-400"></span>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Função principal para processar a URL
+        async function processarNota() {
+            const urlInput = document.getElementById('urlNota');
+            const btn = document.getElementById('btnProcessar');
+            const msg = document.getElementById('statusMsg');
+            const resultadoDiv = document.getElementById('resultado');
 
-<script>
-    async function enviarParaAPI() {
-        const input = document.getElementById('htmlInput').value;
-        const loading = document.getElementById('loading');
-        const resultado = document.getElementById('resultadoContainer');
-
-        if (!input) {
-            alert("Por favor, informe a URL ou o conteúdo HTML da nota.");
-            return;
-        }
-
-        loading.style.display = "block";
-        resultado.style.display = "none";
-
-        try {
-            const resposta = await fetch('http://localhost:8080/processar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: input }) 
-            });
-
-            const dados = await resposta.json();
-            loading.style.display = "none";
-
-            if (dados.erro) {
-                alert("Erro no Servidor: " + dados.erro);
-            } else {
-                renderizarDados(dados);
+            if (!urlInput.value) {
+                mostrarMensagem("❌ Por favor, cole uma URL válida!", "erro");
+                return;
             }
 
-        } catch (erro) {
-            loading.style.display = "none";
-            alert("Erro ao conectar com a API: " + erro.message);
+            // Estado de carregamento: Desativa botão e limpa mensagens
+            btn.disabled = true;
+            btn.innerText = "LENDO BANCO...";
+            msg.classList.add('hidden');
+            resultadoDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('http://localhost:8080/processar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: urlInput.value })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 200) {
+                    // SUCESSO: Nota nova gravada no MongoDB
+                    exibirNota(data);
+                    mostrarMensagem("✅ NOTA FISCAL SALVA NO MONGODB!", "sucesso");
+                } else if (response.status === 409) {
+                    // DUPLICATA: Já existe no banco (Erro que tratamos no Go)
+                    exibirNota(data.nota || data);
+                    mostrarMensagem(data.mensagem || "⚠️ ESTA NOTA JÁ CONSTA NO SEU HISTÓRICO!", "aviso");
+                } else {
+                    // ERRO DE SERVIDOR OU SCRAPER
+                    mostrarMensagem("❌ ERRO: " + (data.erro || "Falha ao processar"), "erro");
+                }
+            } catch (error) {
+                mostrarMensagem("❌ SERVIDOR GO OFFLINE! Verifique se rodou o main.go", "erro");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "PROCESSAR";
+            }
         }
-    }
 
-    function renderizarDados(nf) {
-        // Preenche Cabeçalho
-        document.getElementById('resNome').innerText = nf.estabelecimento.nome || "Não Identificado";
-        document.getElementById('resCNPJ').innerText = `CNPJ: ${nf.estabelecimento.cnpj}`;
-        document.getElementById('resChave').innerText = `CHAVE: ${nf.chave.substring(0,25)}...`;
-        
-        // Preenche Tabela
-        const tbody = document.getElementById('corpoTabela');
-        tbody.innerHTML = "";
-        
-        nf.itens.forEach(item => {
-            const row = `<tr>
-                <td class="ps-4 fw-medium text-secondary">${item.nome}</td>
-                <td>${item.quantidade}</td>
-                <td><span class="badge bg-secondary opacity-75">${item.unidade}</span></td>
-                <td>R$ ${item.preco_unitario.toFixed(2)}</td>
-                <td class="pe-4 text-end fw-bold text-dark">R$ ${item.preco_total.toFixed(2)}</td>
-            </tr>`;
-            tbody.innerHTML += row;
-        });
+        // Função para preencher o HTML e formatar os valores para o padrão PT-BR
+        function exibirNota(nota) {
+            document.getElementById('resultado').classList.remove('hidden');
 
-        // Preenche Total
-        document.getElementById('resTotal').innerText = `R$ ${nf.valor_total.toFixed(2).replace('.', ',')}`;
+            // Formatadores de Moeda e Número (Ponto no milhar e vírgula no decimal)
+            const formatadorMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+            const formatadorNumero = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-        // Exibe o Container
-        document.getElementById('resultadoContainer').style.display = "block";
-        
-        // Scroll suave para o resultado
-        document.getElementById('resultadoContainer').scrollIntoView({ behavior: 'smooth' });
-    }
-</script>
+            // Preenche dados do Estabelecimento
+            document.getElementById('estNome').innerText = nota.estabelecimento.nome || "Estabelecimento Desconhecido";
+            document.getElementById('estCnpj').innerText = "CNPJ: " + (nota.estabelecimento.cnpj || "N/A");
+            document.getElementById('estEndereco').innerText = nota.estabelecimento.endereco || "Endereço não informado";
 
+            // Dados Técnicos da Nota
+            document.getElementById('notaChave').innerText = nota.chave;
+            document.getElementById('notaData').innerText = nota.data_emissao;
+            document.getElementById('notaNumero').innerText = nota.numero;
+
+            // Valor Total Formatado (R$ X.XXX,XX)
+            document.getElementById('valorTotal').innerText = formatadorMoeda.format(nota.valor_total);
+
+            // Preenche a Tabela de Itens
+            const tbody = document.getElementById('listaItens');
+            tbody.innerHTML = "";
+
+            if (nota.itens && nota.itens.length > 0) {
+                nota.itens.forEach(item => {
+                    const pUnit = formatadorNumero.format(item.preco_unitario);
+                    const pTotal = formatadorNumero.format(item.preco_total);
+                    const qtd = item.quantidade.toLocaleString('pt-BR'); // Qtd também com vírgula se for decimal
+
+                    tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="p-5 border-b border-gray-100">
+                            <span class="block font-bold text-gray-800">${item.nome}</span>
+                            <span class="text-[10px] text-gray-400">COD: ${item.codigo}</span>
+                        </td>
+                        <td class="p-5 text-center font-bold text-gray-600 border-b border-gray-100">
+                            ${qtd} <span class="text-[10px] font-normal">${item.unidade}</span>
+                        </td>
+                        <td class="p-5 text-right text-gray-500 italic border-b border-gray-100">
+                            R$ ${pUnit}
+                        </td>
+                        <td class="p-5 text-right font-black text-blue-600 border-b border-gray-100">
+                            R$ ${pTotal}
+                        </td>
+                    </tr>
+                `;
+                });
+            }
+        }
+
+        // Função para gerenciar os alertas visuais
+        function mostrarMensagem(texto, tipo) {
+            const msg = document.getElementById('statusMsg');
+            msg.innerText = texto;
+            msg.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'bg-yellow-100', 'text-red-700', 'text-green-700', 'text-yellow-700', 'border-red-200', 'border-green-200', 'border-yellow-200');
+
+            if (tipo === "erro") {
+                msg.classList.add('bg-red-100', 'text-red-700', 'border-red-200');
+            } else if (tipo === "sucesso") {
+                msg.classList.add('bg-green-100', 'text-green-700', 'border-green-200');
+            } else {
+                msg.classList.add('bg-yellow-100', 'text-yellow-700', 'border-yellow-200');
+            }
+        }
+    </script>
 </body>
+
 </html>

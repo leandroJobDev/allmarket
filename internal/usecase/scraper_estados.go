@@ -171,27 +171,26 @@ func normalizarData(dataBruta string) string {
 }
 
 func extrairNumero(texto string) float64 {
-	if texto == "" { return 0 }
+    if texto == "" { return 0 }
 
-	// Limpa o texto mantendo apenas dígitos, vírgula e ponto
-	limpo := strings.Map(func(r rune) rune {
-		if (r >= '0' && r <= '9') || r == ',' || r == '.' { return r }
-		return -1
-	}, texto)
+    // Remove R$, espaços e caracteres não numéricos, exceto vírgula e ponto
+    limpo := strings.Map(func(r rune) rune {
+        if (r >= '0' && r <= '9') || r == ',' || r == '.' { return r }
+        return -1
+    }, texto)
 
-	// Se for o caso de PE (ex: 139000 sem virgula nenhuma)
-	// Geralmente esses valores vêm com 4 casas decimais implícitas
-	if !strings.Contains(limpo, ",") && !strings.Contains(limpo, ".") && len(limpo) > 4 {
-		v, _ := strconv.ParseFloat(limpo, 64)
-		return v / 10000 
-	}
+    if strings.Contains(limpo, ",") && strings.Contains(limpo, ".") {
+        limpo = strings.ReplaceAll(limpo, ".", "") 
+        limpo = strings.Replace(limpo, ",", ".", 1)
+    } else if strings.Contains(limpo, ",") {
+        limpo = strings.Replace(limpo, ",", ".", 1)
+    }
 
-	// Caso padrão brasileiro: troca a vírgula decimal por ponto para o ParseFloat
-	if strings.Contains(limpo, ",") {
-		limpo = strings.ReplaceAll(limpo, ".", "") // Remove pontos de milhar
-		limpo = strings.Replace(limpo, ",", ".", 1) // Troca virgula por ponto
-	}
+    v, _ := strconv.ParseFloat(limpo, 64)
+  
+    if v < 1.0 && v > 0 {
+        return v * 10
+    }
 
-	v, _ := strconv.ParseFloat(limpo, 64)
-	return v
+    return v
 }
