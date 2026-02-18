@@ -1,70 +1,84 @@
+```markdown
 # 🛒 AllMarket - Sistema de Gestão de Compras
 
-O **AllMarket** é uma API robusta desenvolvida em Go, projetada para gerenciar, validar e extrair dados de compras a partir de notas fiscais eletrônicas (NFC-e). O projeto utiliza padrões de arquitetura modernos para garantir escalabilidade e alta performance no processamento de dados fiscais.
+O **AllMarket** é uma API robusta desenvolvida em **Go (Golang)**, projetada para gerenciar, validar e extrair dados de compras a partir de notas fiscais eletrônicas (NFC-e). O projeto utiliza **Clean Architecture** e conta com persistência em nuvem (NoSQL) e deploy automatizado.
 
-## 📺 Demonstração
-
-> **Status do Projeto:** MVP Funcional - Extrator Multiestadual 🚀
-
-<p align="center">
-  <img src="./allmarket.gif" alt="Demonstração AllMarket" width="800px">
-</p>
+## 📺 Status do Projeto
+**MVP Funcional - Produção 🚀** A API está hospedada na **Render** e conectada ao **MongoDB Atlas**, processando e armazenando dados reais com alta performance.
 
 ---
 
 ## 🛠️ Tecnologias e Ferramentas
 
-* **Linguagem:** Go (Golang) v1.22+.
-* **Framework Web:** [Gin Gonic](https://www.google.com/search?q=https://gin-gonic.com/) para roteamento eficiente e alta performance.
-* **Web Scraping:** [GoQuery](https://www.google.com/search?q=https://github.com/PuerkitoBio/goquery) para parsing de HTML e XML da SEFAZ.
-* **Frontend:** HTML5, CSS3 (Bootstrap 5) e JavaScript Assíncrono (Fetch API).
-* **Arquitetura:** Clean Architecture para separação de responsabilidades.
+* **Linguagem:** Go (Golang) v1.22+
+* **Framework Web:** [Gin Gonic](https://gin-gonic.com/) (Roteamento de alta performance)
+* **Banco de Dados:** [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (Persistência NoSQL em nuvem)
+* **Web Scraping:** [GoQuery](https://github.com/PuerkitoBio/goquery) para parsing de dados da SEFAZ
+* **Frontend:** HTML5, CSS3 (Bootstrap 5) e JavaScript (Fetch API)
+* **Deploy/Hospedagem:** [Render](https://render.com/)
+* **Segurança:** [Godotenv](https://github.com/joho/godotenv) para gestão de variáveis de ambiente
 
 ---
 
 ## 🏗️ Estrutura do Projeto (Clean Architecture)
 
-O projeto está organizado seguindo os princípios da arquitetura limpa, dividindo a lógica em camadas independentes:
+O projeto é dividido em camadas independentes para facilitar testes e manutenção:
 
-* **`cmd/api/`**: Ponto de entrada da aplicação. Configura o servidor HTTP, middlewares de CORS e as rotas da API.
-* **`internal/entity/`**: Contém os modelos de domínio (`NotaFiscal`, `Item`, `Estabelecimento`) e as regras de negócio essenciais, como o cálculo de totais.
-* **`internal/usecase/`**: Camada de regras de aplicação. Contém os scrapers especializados para diferentes estados e a lógica de orquestração do processamento.
-
----
-
-## 🚀 Funcionalidades Atuais
-
-* **Processamento Híbrido:** Suporte para extração de dados via URL direta ou colagem de código-fonte HTML/XML.
-* **Suporte Multiestadual:** Scrapers configurados para os padrões de Santa Catarina (SC), Pernambuco (PE) e Paraíba (PB).
-* **Normalização de Dados:** Tratamento automático de formatos de data (RFC3339) e conversão de valores monetários e quantidades.
-* **Interface Responsiva:** Painel visual que exibe detalhes do estabelecimento (CNPJ, Nome), chave de acesso e tabela detalhada de produtos.
-* **Cálculo de Integridade:** Validação interna do valor total da nota com base na soma dos itens processados.
+* **`cmd/api/`**: Ponto de entrada da aplicação. Configura o servidor, carrega variáveis de ambiente e define as rotas.
+* **`internal/entity/`**: Modelos de domínio (`NotaFiscal`, `Item`, `Estabelecimento`) e regras de negócio essenciais.
+* **`internal/usecase/`**: Regras de aplicação. Contém os scrapers especializados e a lógica de orquestração do processamento.
+* **`internal/infrastructure/`**: Adaptadores para serviços externos, como a implementação do repositório **MongoDB**.
 
 ---
 
-## 🧪 Como Testar
+## 🚀 Funcionalidades Implementadas
 
-1. Certifique-se de ter o **Go** instalado em sua máquina.
-2. Inicie o servidor backend:
+* **Persistência em Nuvem:** Armazenamento automático de notas fiscais no MongoDB Atlas.
+* **Prevenção de Duplicidade:** O sistema valida a chave de acesso para evitar o reprocessamento de notas já existentes no banco.
+* **Segurança de Dados:** Uso de "Cofre" de variáveis de ambiente (`.env`) para proteção de credenciais sensíveis.
+* **CORS Habilitado:** Configuração de middlewares para permitir comunicação segura entre frontend e API.
+* **Suporte Multiestadual:** Extração inteligente de dados para os padrões de Santa Catarina (SC), Pernambuco (PE) e Paraíba (PB).
+* **Health Check:** Rota raiz (`/`) para monitoramento de disponibilidade em tempo real.
+
+---
+
+## 🧪 Como Rodar o Projeto
+
+### 1. Pré-requisitos
+* Go 1.22 ou superior instalado.
+* Conta no MongoDB Atlas (ou instância local do MongoDB).
+
+### 2. Configuração do Ambiente
+Crie um arquivo `.env` na raiz do projeto:
+```text
+MONGO_USER=seu_usuario_atlas
+MONGO_PASS=sua_senha_atlas
+PORT=8080
+
+```
+
+### 3. Execução
+
 ```bash
+# Instalar dependências
+go mod tidy
+
+# Iniciar o servidor
 go run cmd/api/main.go
 
 ```
 
+---
 
-3. Abra o arquivo `index.html` em qualquer navegador moderno.
-4. Copie uma URL de consulta de NFC-e (ex: SEFAZ-PE) e clique em **"Processar Nota Fiscal"**.
+## 📈 Próximos Passos
+
+* [ ] Implementar **Firebase Auth** ou **JWT** para gestão de usuários.
+* [ ] Criar dashboard de comparação de preços entre diferentes estabelecimentos.
+* [ ] Adicionar suporte a OCR para leitura de cupons físicos sem QR Code.
+* [ ] Exportação de relatórios mensais de gastos em PDF/Excel.
 
 ---
 
-### 📈 Próximos Passos
+**Desenvolvido com foco em escalabilidade e qualidade de código por Leandro.**
 
-* [ ] Integração com **Firebase Auth** para gestão de usuários.
-* [ ] Persistência de dados no **Google Cloud Firestore**.
-* [ ] Dashboards de comparação de preços e histórico de gastos.
-
----
-
-**Desenvolvido com foco em performance e qualidade de código por Leandro.**
-
----
+```
