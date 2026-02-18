@@ -3,61 +3,61 @@ package main
 import (
 	"allmarket/internal/infrastructure"
 	"allmarket/internal/usecase"
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"google.golang.org/api/idtoken"
 )
 
-type Requisicao struct {
-	URL string `json:"url"`
+type RequisicaoProcessar struct {
+	URL   string `json:"url"`
+	Email string `json:"email"` // E-mail do usuário logado vindo do frontend
+}
+
+type RequisicaoLogin struct {
+	Token string `json:"token"`
 }
 
 func main() {
-	// 1. CARREGAMENTO DO "COFRE"
-	// Tenta carregar o .env da raiz. Se não achar (na Render), ele ignora o erro.
+	// 1. CARREGAMENTO DAS CONFIGURAÇÕES
 	_ = godotenv.Load()
 
-	usuario := os.Getenv("MONGO_USER")
-	senha := os.Getenv("MONGO_PASS")
-	porta := os.Getenv("PORT")
+	mongoUser := os.Getenv("MONGO_USER")
+	mongoPass := os.Getenv("MONGO_PASS")
+	googleClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	port := os.Getenv("PORT")
 
-	// Se estiver rodando local e a porta estiver vazia, usa 8080
-	if porta == "" {
-		porta = "8080"
+	if port == "" {
+		port = "8080"
 	}
 
-	// Trava de segurança: se não tiver usuário ou senha, o app nem tenta rodar
-	if usuario == "" || senha == "" {
-		fmt.Println("❌ ERRO CRÍTICO: Variáveis de ambiente MONGO_USER ou MONGO_PASS não configuradas!")
-		return
-	}
-
-	// 2. CONEXÃO COM O BANCO DE DADOS
-	// Montamos a URL usando url.QueryEscape para garantir que caracteres especiais na senha não quebrem a conexão
-	clusterAddr := "cluster0.5sz7ony.mongodb.net" // Certifique-se que este é o endereço do seu Atlas
-	senhaEscapada := url.QueryEscape(senha)
+	// 2. CONEXÃO COM MONGODB
+	clusterAddr := "cluster0.5sz7ony.mongodb.net"
+	passEscapada := url.QueryEscape(mongoPass)
 	uri := fmt.Sprintf("mongodb+srv://%s:%s@%s/?appName=Cluster0", 
-		usuario, senhaEscapada, clusterAddr)
+		mongoUser, passEscapada, clusterAddr)
 
 	repo, err := infrastructure.NewMongoRepository(uri)
 	if err != nil {
-		fmt.Printf("❌ Falha na conexão com MongoDB Atlas: %v\n", err)
+		fmt.Printf("❌ Erro MongoDB: %v\n", err)
 		return
 	}
-	fmt.Println("✅ Conectado ao MongoDB Atlas com sucesso!")
+	fmt.Println("✅ Banco de Dados conectado!")
 
-	// 3. CONFIGURAÇÃO DO SERVIDOR (GIN)
+	// 3. CONFIGURAÇÃO DO SERVIDOR
 	router := gin.Default()
 
-	// Middleware de CORS: Permite que seu frontend (HTML) fale com seu backend (Render)
+	// Middleware de CORS ajustado para aceitar requisições do seu Front
 	router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
@@ -67,46 +67,93 @@ func main() {
 
 	// 4. ROTAS
 
-	// Rota Raiz (Para não dar mais Not Found no seu link da Render)
+	// Rota de Health Check
 	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "API AllMarket Online",
-			"mensagem": "O servidor está rodando perfeitamente!",
+		c.JSON(200, gin.H{"status": "AllMarket API Online"})
+	})
+
+	// ROTA DE LOGIN DO GOOGLE
+	router.POST("/auth/google", func(c *gin.Context) {
+		var req RequisicaoLogin
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(400, gin.H{"error": "Token não enviado"})
+			return
+		}
+
+		// Valida o token com o Google
+		payload, err := idtoken.Validate(context.Background(), req.Token, googleClientID)
+		if err != nil {
+			fmt.Printf("Erro validar token: %v\n", err)
+			c.JSON(401, gin.H{"error": "Token inválido"})
+			return
+		}
+
+		// Extrai dados do usuário
+		email := payload.Claims["email"].(string)
+		nome := payload.Claims["name"].(string)
+
+		c.JSON(200, gin.H{
+			"status": "sucesso",
+			"email":  email,
+			"name":   nome,
 		})
 	})
 
-	// Rota de Processamento
+	router.GET("/historico", func(c *gin.Context) {
+    email := c.Query("email") // Recebe o e-mail via parâmetro na URL
+    if email == "" {
+        c.JSON(400, gin.H{"error": "E-mail é obrigatório"})
+        return
+    }
+
+    // Busca no repositório (MongoDB)
+    notas, err := repo.ListarPorEmail(strings.ToLower(email))
+    if err != nil {
+        c.JSON(500, gin.H{"error": "Erro ao buscar histórico"})
+        return
+    }
+
+    c.JSON(200, notas)
+})
+
+	// ROTA DE PROCESSAR NOTA (VINCULADA AO USUÁRIO)
 	router.POST("/processar", func(c *gin.Context) {
-		var req Requisicao
+		var req RequisicaoProcessar
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"erro": "JSON enviado é inválido"})
+			c.JSON(400, gin.H{"error": "Dados inválidos"})
 			return
 		}
 
-		// Chama o Scraper para capturar os dados da nota
+		if req.Email == "" {
+			c.JSON(401, gin.H{"error": "Usuário não identificado. Faça login primeiro."})
+			return
+		}
+
+		// Scraper da Nota
 		nota, err := usecase.ScraperPadraoNacional(req.URL)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao processar nota: " + err.Error()})
+			c.JSON(500, gin.H{"error": "Erro no processamento: " + err.Error()})
 			return
 		}
 
-		// Salva no MongoDB
+		// Vincula a nota ao e-mail do usuário logado
+		nota.UsuarioEmail = strings.ToLower(req.Email)
+
+		// Salva no Banco
 		err = repo.Salvar(nota)
 		if err != nil {
 			if err.Error() == "esta nota fiscal já foi processada e salva anteriormente" {
-				c.JSON(http.StatusConflict, gin.H{"mensagem": "⚠️ Esta nota já está no banco.", "nota": nota})
+				c.JSON(409, gin.H{"message": "Nota já cadastrada", "nota": nota})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"erro": "Erro ao salvar no banco"})
+			c.JSON(500, gin.H{"error": "Erro ao salvar no banco"})
 			return
 		}
 
-		c.JSON(http.StatusOK, nota)
+		c.JSON(200, nota)
 	})
 
 	// 5. START
-	fmt.Printf("🚀 Servidor AllMarket rodando na porta %s...\n", porta)
-	if err := router.Run(":" + porta); err != nil {
-		fmt.Printf("❌ Falha ao subir o servidor: %v\n", err)
-	}
+	fmt.Printf("🚀 Servidor rodando na porta %s...\n", port)
+	router.Run(":" + port)
 }

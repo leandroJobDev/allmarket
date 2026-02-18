@@ -82,3 +82,33 @@ func (r *MongoRepository) BuscarTodas() ([]entity.NotaFiscal, error) {
 
 	return notas, nil
 }
+func (r *MongoRepository) ListarPorEmail(email string) ([]entity.NotaFiscal, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := r.client.Database("allmarket").Collection("notas")
+
+	// Filtro: busca notas onde o campo usuario_email seja igual ao email passado
+	filter := bson.M{"usuario_email": email}
+    
+	// Opções: Ordenar pela data de emissão (descendente)
+	opts := options.Find().SetSort(bson.D{{Key: "data_emissao", Value: -1}})
+
+	cursor, err := collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var notas []entity.NotaFiscal
+	if err = cursor.All(ctx, &notas); err != nil {
+		return nil, err
+	}
+
+	// Se não encontrar nada, retorna um array vazio em vez de nil (evita erro no frontend)
+	if notas == nil {
+		notas = []entity.NotaFiscal{}
+	}
+
+	return notas, nil
+}
