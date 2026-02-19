@@ -3,8 +3,8 @@ package infrastructure
 import (
 	"allmarket/internal/entity"
 	"context"
-	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -17,6 +17,7 @@ type MongoRepository struct {
 	collection *mongo.Collection
 }
 
+// NewMongoRepository cria a conexão e inicializa a collection
 func NewMongoRepository(uri string) (*MongoRepository, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -26,11 +27,12 @@ func NewMongoRepository(uri string) (*MongoRepository, error) {
 		return nil, fmt.Errorf("falha ao conectar no driver: %w", err)
 	}
 
+	// Verifica se a conexão está ativa
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("falha ao dar ping no Atlas: %w", err)
 	}
-	
+
 	db := client.Database("allmarket")
 	collection := db.Collection("notas")
 
@@ -40,61 +42,70 @@ func NewMongoRepository(uri string) (*MongoRepository, error) {
 	}, nil
 }
 
+// Salvar insere a nota e retorna o erro original do Mongo para o main.go tratar o 409
 func (r *MongoRepository) Salvar(nota entity.NotaFiscal) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	if r.collection == nil {
+		return fmt.Errorf("coleção não inicializada")
+	}
+
 	_, err := r.collection.InsertOne(ctx, nota)
 	if err != nil {
-		if mongo.IsDuplicateKeyError(err) {
-			return errors.New("esta nota fiscal já foi processada e salva anteriormente")
-		}
-		return fmt.Errorf("erro ao inserir no MongoDB: %w", err)
+		// Retornamos o erro bruto para que o main.go use mongo.IsDuplicateKeyError(err)
+		return err
 	}
 
 	return nil
 }
 
-func (r *MongoRepository) BuscarTodas() ([]entity.NotaFiscal, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	cursor, err := r.collection.Find(ctx, options.Find())
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var notas []entity.NotaFiscal
-	if err = cursor.All(ctx, &notas); err != nil {
-		return nil, err
-	}
-
-	return notas, nil
-}
+// ListarPorEmail busca o histórico e garante que não retorne nil
 func (r *MongoRepository) ListarPorEmail(email string) ([]entity.NotaFiscal, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	collection := r.client.Database("allmarket").Collection("notas")
+	if r.collection == nil {
+		return nil, fmt.Errorf("repositório não inicializado")
+	}
 
-	filter := bson.M{"usuario_email": email}
-    
+	// Normaliza o e-mail para evitar erros de busca (Case Insensitive)
+	emailBusca := strings.ToLower(strings.TrimSpace(email))
+	filter := bson.M{"usuario_email": emailBusca}
+
+	// Ordena por data de emissão decrescente (mais recentes primeiro)
 	opts := options.Find().SetSort(bson.D{{Key: "data_emissao", Value: -1}})
 
-	cursor, err := collection.Find(ctx, filter, opts)
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("erro na busca: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	// Inicializamos como slice vazio para o JSON retornar [] em vez de null
+	notas := []entity.NotaFiscal{}
+
+	if err = cursor.All(ctx, &notas); err != nil {
+		return nil, fmt.Errorf("erro ao decodificar notas: %w", err)
+	}
+
+	return notas, nil
+}
+
+// BuscarTodas (Opcional, caso queira listar tudo sem filtro)
+func (r *MongoRepository) BuscarTodas() ([]entity.NotaFiscal, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cursor, err := r.collection.Find(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var notas []entity.NotaFiscal
+	notas := []entity.NotaFiscal{}
 	if err = cursor.All(ctx, &notas); err != nil {
 		return nil, err
-	}
-
-	if notas == nil {
-		notas = []entity.NotaFiscal{}
 	}
 
 	return notas, nil

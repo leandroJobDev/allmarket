@@ -1,95 +1,119 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>AllMarket | Gestão de Compras</title>
-    
+    <title>AllMarket - Gestor de Notas Fiscais</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
-    <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
 
-    <nav class="navbar navbar-expand-lg sticky-top mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="#"><i class="bi bi-cart4"></i> AllMarket</a>
-            <div class="d-flex align-items-center" id="nav-auth-section"></div>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+
+    <nav class="bg-white border-b border-gray-200 p-4 mb-6 shadow-sm">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div id="nav-auth" class="flex items-center gap-2"></div>
+
+            <div id="login-gate">
+                <div id="g_id_onload"
+                    data-client_id="570724598871-n23jsilb8ncvfv2ve6b848q327fgdav9.apps.googleusercontent.com"
+                    data-callback="handleCredentialResponse">
+                </div>
+                <div class="g_id_signin" data-type="standard"></div>
+            </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div id="login-gate">
-            <div class="card p-5 text-center shadow-lg" style="max-width: 450px;">
-                <div class="mb-4"><i class="bi bi-shield-lock-fill text-primary" style="font-size: 3rem;"></i></div>
-                <h2 class="fw-bold">Acesse sua Conta</h2>
-                <p class="text-muted">Conecte-se para salvar e consultar suas notas fiscais.</p>
-                <div class="d-flex justify-content-center mt-4">
-                    <div id="g_id_onload"
-                        data-client_id="570724598871-n23jsilb8ncvfv2ve6b848q327fgdav9.apps.googleusercontent.com"
-                        data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
-                    <div class="g_id_signin" data-type="standard" data-size="large" data-shape="pill"></div>
-                </div>
+    <div id="app-content" class="max-w-4xl mx-auto p-4 md:p-8 hidden">
+
+        <header class="text-center mb-10">
+            <h1 class="text-5xl font-black text-blue-600 mb-2">AllMarket</h1>
+            <p class="text-gray-500 text-lg">Seu extrator de dados NoSQL inteligente</p>
+
+            <button onclick="carregarHistorico()"
+                class="mt-4 text-xs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-widest flex items-center justify-center gap-2 mx-auto transition-all bg-blue-50 px-4 py-2 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                VER MEU HISTÓRICO
+            </button>
+        </header>
+
+        <div class="bg-white p-6 rounded-2xl shadow-xl mb-8">
+            <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">URL do QR Code da
+                Nota</label>
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="urlNota" placeholder="https://www.nfe.fazenda.gov.br/..."
+                    class="flex-1 p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all">
+                <button onclick="enviarNota()" id="btnProcessar"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-10 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:bg-gray-400 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M3 4.5A1.5 1.5 0 014.5 3h4A1.5 1.5 0 0110 4.5v4A1.5 1.5 0 018.5 10h-4A1.5 1.5 0 013 8.5v-4zM3 15.5A1.5 1.5 0 014.5 14h4a1.5 1.5 0 011.5 1.5v4A1.5 1.5 0 018.5 21h-4A1.5 1.5 0 013 19.5v-4zM14 4.5A1.5 1.5 0 0115.5 3h4A1.5 1.5 0 0121 4.5v4a1.5 1.5 0 01-1.5 1.5h-4A1.5 1.5 0 0114 8.5v-4zM14 14.5v1m0 3v2m3-5h2m-5 3h2m3 0h2m-3 2h2m-3-5V14m3 0v1m-6 5h1" />
+                    </svg>
+                    CONSULTAR
+                </button>
             </div>
         </div>
 
-        <div id="app-content" style="display: none;">
-            <ul class="nav nav-pills justify-content-center mb-4" id="pills-tab" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#sessao-nova"><i class="bi bi-plus-circle"></i> Nova Nota</button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#sessao-historico" onclick="carregarHistorico()"><i class="bi bi-clock-history"></i> Meu Histórico</button>
-                </li>
-            </ul>
+        <div id="historicoSec" class="hidden mb-12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-black text-gray-700 uppercase tracking-tight">Notas no Banco</h3>
+                <button onclick="document.getElementById('historicoSec').classList.add('hidden')"
+                    class="text-gray-400 hover:text-red-500 font-bold">FECHAR ×</button>
+            </div>
+            <div id="lista-hist" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
 
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="sessao-nova">
-                    <div class="row justify-content-center">
-                        <div class="col-md-8">
-                            <div class="card p-4 mb-4">
-                                <h5 class="mb-3 fw-bold">Processar Nota Fiscal</h5>
-                                <div class="input-group">
-                                    <input type="text" id="urlNota" class="form-control" placeholder="Cole o link da nota aqui...">
-                                    <button class="btn btn-primary" onclick="enviarNota()">Processar</button>
-                                </div>
-                            </div>
-                            <div id="resultado" class="card p-4 shadow-sm" style="display: none;">
-                                <h4 id="estabelecimento-nome" class="text-primary fw-bold"></h4>
-                                <p class="text-muted"><i class="bi bi-calendar-check"></i> <span id="nota-data"></span></p>
-                                <h5 class="text-end fw-bold">Total: R$ <span id="nota-total"></span></h5>
-                                <hr>
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr><th>Item</th><th class="text-center">Qtd</th><th class="text-end">Preço</th></tr>
-                                        </thead>
-                                        <tbody id="itens-tabela"></tbody>
-                                    </table>
-                                </div>
-                            </div>
+        <div id="res" class="hidden space-y-6 pb-20">
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-t-8 border-blue-600 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <svg width="100" height="100" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                    </svg>
+                </div>
+                <div class="relative z-10">
+                    <h2 id="loja" class="text-3xl font-black text-gray-900 leading-tight"></h2>
+                    <p id="info-nota" class="text-blue-500 font-mono font-bold mt-1"></p>
+                    <p id="estEndereco" class="text-gray-500 mt-2 italic opacity-50">Endereço da Nota</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-100">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold text-gray-400 block">Chave de Acesso</span>
+                            <code
+                                class="text-xs bg-gray-50 p-1 rounded text-gray-600">Verifique no portal da SEFAZ</code>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="tab-pane fade" id="sessao-historico">
-                    <div class="row justify-content-center">
-                        <div class="col-md-10">
-                            <div id="lista-historico" class="row"></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-blue-50 text-blue-900">
+                        <tr>
+                            <th class="p-5 font-black uppercase text-xs">Produto</th>
+                            <th class="p-5 text-right font-black uppercase text-xs">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itens" class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+
+            <div class="bg-gray-900 text-white p-8 rounded-2xl shadow-2xl flex justify-between items-center">
+                <span class="text-xl font-bold opacity-70">STATUS:</span>
+                <span class="text-green-400 font-black">PROCESSADA</span>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
     <script src="js/app.js"></script>
 </body>
+
 </html>

@@ -1,111 +1,81 @@
-const API_URL = "https://allmarket-api.onrender.com";
-
-function parseJwt(token) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(window.atob(base64));
-}
-
-function handleCredentialResponse(response) {
-    const userData = parseJwt(response.credential);
-    localStorage.setItem("user_email", userData.email);
-    localStorage.setItem("user_name", userData.name);
-    
-    fetch(`${API_URL}/auth/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: response.credential })
-    }).then(() => verificarSessao());
-}
+const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const API_URL = isLocal ? "http://localhost:8080" : "https://allmarket-api.onrender.com";
 
 function verificarSessao() {
-    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-
-    if (isLocalhost) {
-        if (!localStorage.getItem("user_email")) {
-            localStorage.setItem("user_email", "dev@localhost.com");
-            localStorage.setItem("user_name", "Desenvolvedor Local");
-        }
+    if (isLocal && !localStorage.getItem("user_email")) {
+        localStorage.setItem("user_email", "dev@localhost.com");
+        localStorage.setItem("user_name", "Dev Local");
     }
-
     const email = localStorage.getItem("user_email");
     if (email) {
-        const loginGate = document.getElementById("login-gate");
-        const appContent = document.getElementById("app-content");
-        const navAuth = document.getElementById("nav-auth") || document.getElementById("nav-auth-section");
-
-        if (loginGate) loginGate.style.display = "none";
-        if (appContent) appContent.style.display = "block";
-        
-        if (navAuth) {
-            navAuth.innerHTML = `
-                <span class="badge bg-light text-dark p-2">${email}</span>
-                <a href="#" onclick="sair()" class="text-danger ms-2" style="text-decoration:none">
-                    <i class="bi bi-box-arrow-right"></i> Sair
-                </a>`;
+        document.getElementById("app-content").classList.remove("hidden");
+        document.getElementById("login-gate").classList.add("hidden");
+        const nav = document.getElementById("nav-auth");
+        if (nav) {
+            nav.innerHTML = `<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">${email}</span>
+                             <button onclick="sair()" class="ml-2 text-xs text-red-500 font-bold uppercase">Sair</button>`;
         }
     }
 }
+
+const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 async function enviarNota() {
     const url = document.getElementById("urlNota").value;
     const email = localStorage.getItem("user_email");
-    if(!url) return Swal.fire("Ops", "Cole o link da nota!", "warning");
+    if (!url) return Swal.fire("Ops", "Cole a URL da nota!", "warning");
 
-    Swal.fire({title: 'Lendo Nota...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-    
+    Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
+
     try {
         const r = await fetch(`${API_URL}/processar`, {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({url, email})
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url, email })
         });
-        const nota = await r.json();
+        const data = await r.json();
         Swal.close();
 
         if (r.ok || r.status === 409) {
-            document.getElementById("res").style.display = "block";
+            const nota = data.nota || data;
+
+            // 1. Mostrar container de resultado
+            document.getElementById("res").classList.remove("hidden");
+
+            // 2. Preencher Loja e Endereço
             document.getElementById("loja").innerText = nota.estabelecimento.nome;
-            document.getElementById("info-nota").innerText = `Data: ${nota.data_emissao} | Total: R$ ${nota.valor_total.toFixed(2)}`;
-            document.getElementById("itens").innerHTML = nota.itens.map(i => `
-                <tr>
-                    <td>${i.nome}</td>
-                    <td class="text-end fw-bold">R$ ${i.preco_total.toFixed(2)}</td>
+            document.getElementById("estEndereco").innerText = nota.estabelecimento.endereco;
+            document.getElementById("info-nota").innerText = `Nº ${nota.numero} | EMISSÃO: ${nota.data_emissao}`;
+
+            // 3. ACHAR A CHAVE (Mesmo sem ID no HTML)
+            // Procura a tag <code> que contém o texto de aviso e troca pela chave real
+            const codes = document.getElementsByTagName("code");
+            for (let i = 0; i < codes.length; i++) {
+                if (codes[i].innerText.includes("Verifique") || codes[i].innerText.length > 20) {
+                    codes[i].innerText = nota.chave;
+                }
+            }
+
+            // 4. Preencher Itens
+            const tbody = document.getElementById("itens");
+            tbody.innerHTML = nota.itens.map(i => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-5 text-sm">
+                        <span class="block font-black text-gray-800 uppercase">${i.nome}</span>
+                        <span class="text-[10px] text-gray-400">QTD: ${i.quantidade} | UNIT: ${formatarMoeda(i.preco_unitario)}</span>
+                    </td>
+                    <td class="p-5 text-right font-black text-blue-600">
+                        ${formatarMoeda(i.preco_total)}
+                    </td>
                 </tr>
             `).join('');
-            if(r.status === 409) Swal.fire("Nota duplicada", "Essa nota já estava no seu histórico.", "info");
-        } else {
-            Swal.fire("Erro", nota.error || "Erro desconhecido", "error");
+
+            if (r.status === 409) Swal.fire("Nota já cadastrada", "Dados carregados do histórico.", "info");
         }
-    } catch(e) { Swal.fire("Erro", "Servidor offline ou erro de conexão", "error"); }
-}
-
-async function carregarHistorico() {
-    const email = localStorage.getItem("user_email");
-    const container = document.getElementById("lista-hist");
-    container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
-
-    try {
-        const res = await fetch(`${API_URL}/historico?email=${email}`);
-        const notas = await res.json();
-        
-        if (notas.length === 0) {
-            container.innerHTML = '<p class="text-center p-5">Nenhuma nota salva.</p>';
-            return;
-        }
-
-        container.innerHTML = notas.map(n => `
-            <div class="col-md-4 mb-3">
-                <div class="card p-3 h-100 border-start border-primary border-4 shadow-sm">
-                    <div class="fw-bold text-truncate">${n.estabelecimento.nome}</div>
-                    <small class="text-muted">${n.data_emissao}</small>
-                    <div class="mt-2 fw-bold text-primary">R$ ${n.valor_total.toFixed(2)}</div>
-                    <small class="text-muted mt-1">${n.itens.length} itens</small>
-                </div>
-            </div>
-        `).join('');
-    } catch(e) { container.innerHTML = '<p class="text-danger text-center">Erro ao carregar histórico.</p>'; }
+    } catch (e) {
+        Swal.fire("Erro", "Falha ao conectar no servidor.", "error");
+    }
 }
 
 function sair() { localStorage.clear(); location.reload(); }
-window.onload = verificarSessao;
+verificarSessao();

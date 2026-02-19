@@ -19,26 +19,21 @@ func ScraperPadraoNacional(urlNota string) (entity.NotaFiscal, error) {
 	}
 
 	textoCompleto := doc.Text()
+
 	nf := entity.NotaFiscal{
-		Chave:           extrairChave(textoCompleto),
+		Chave:           extrairChave(doc, textoCompleto),
 		Estabelecimento: extrairEstabelecimento(doc, textoCompleto),
 	}
 
-	// Tenta extrair pelo formato XML primeiro (Pernambuco)
 	if doc.Find("det").Length() > 0 {
 		return extrairDadosXML(doc, nf), nil
 	}
 
-	// Fallback para formato HTML (Santa Catarina)
 	return extrairDadosHTML(doc, nf, textoCompleto), nil
 }
 
-// --- FUNÇÕES DE APOIO (Módulos) ---
-
 func obterDocumento(input string) (*goquery.Document, error) {
 	input = strings.TrimSpace(input)
-
-	// Se for uma URL (começa com http), faz o download
 	if strings.HasPrefix(input, "http") {
 		client := &http.Client{Timeout: 30 * time.Second}
 		req, _ := http.NewRequest("GET", input, nil)
@@ -55,22 +50,32 @@ func obterDocumento(input string) (*goquery.Document, error) {
 		}
 		return goquery.NewDocumentFromReader(res.Body)
 	}
-
-	// SE NÃO FOR URL: Trata como o HTML que você colou no textarea
 	return goquery.NewDocumentFromReader(strings.NewReader(input))
 }
 
-func extrairChave(texto string) string {
-	re := regexp.MustCompile(`(\d\s*){44}`)
-	bruta := re.FindString(texto)
+func extrairChave(doc *goquery.Document, texto string) string {
+	// 1. Tenta buscar pela classe específica que você mandou
+	chave := doc.Find(".chave").Text()
+	if chave == "" {
+		chave = doc.Find("#chave, .txtChave").Text()
+	}
+
+	// 2. Se falhar nas tags, usa Regex no texto
+	if chave == "" {
+		re := regexp.MustCompile(`(\d\s*){44}`)
+		chave = re.FindString(texto)
+	}
+
+	// Limpa tudo que não for número
 	return strings.Map(func(r rune) rune {
-		if r >= '0' && r <= '9' { return r }
+		if r >= '0' && r <= '9' {
+			return r
+		}
 		return -1
-	}, bruta)
+	}, chave)
 }
 
 func extrairEstabelecimento(doc *goquery.Document, texto string) entity.Estabelecimento {
-	// Tenta XML, se vazio tenta HTML
 	nome := doc.Find("emit xNome").Text()
 	if nome == "" {
 		nome = doc.Find(".txtTopo, #u20, .txtTit").First().Text()
@@ -90,19 +95,20 @@ func extrairEstabelecimento(doc *goquery.Document, texto string) entity.Estabele
 }
 
 func extrairEndereco(doc *goquery.Document) string {
-	// Lógica XML
 	if rua := doc.Find("enderEmit xLgr").Text(); rua != "" {
 		return fmt.Sprintf("%s, %s - %s", rua, doc.Find("enderEmit nro").Text(), doc.Find("enderEmit xMun").Text())
 	}
 
-	// Lógica HTML (SC)
 	var partes []string
-	doc.Find(".text").Each(func(_ int, s *goquery.Selection) {
+	// Tenta pegar o endereço no padrão HTML
+	doc.Find(".text, .txtEndereco").Each(func(_ int, s *goquery.Selection) {
 		t := strings.TrimSpace(s.Text())
-		if t != "" && !strings.Contains(t, "CNPJ") && strings.Contains(t, ",") {
+		if t != "" && !strings.Contains(t, "CNPJ") && (strings.Contains(t, ",") || strings.Contains(t, "SP")) {
 			partes = append(partes, t)
 		}
 	})
+	
+	if len(partes) == 0 { return "Endereço não identificado" }
 	return strings.Join(strings.Fields(strings.Join(partes, " ")), " ")
 }
 
@@ -130,34 +136,31 @@ func extrairDadosHTML(doc *goquery.Document, nf entity.NotaFiscal, texto string)
 	nf.Serie = regexBusca(texto, `(?i)Série:\s*(\d+)`)
 	nf.DataEmissao = normalizarData(regexBusca(texto, `(?i)Emissão:\s*(\d{2}/\d{2}/\d{4}\s*\d{2}:\d{2}:\d{2})`))
 	
-	nf.ValorTotal = extrairNumero(regexBusca(texto, `(?i)Valor\s*total\s*R\$\s*([0-9.,]+)`))
+	nf.ValorTotal = extrairNumero(regexBusca(texto, `(?i)Valor\s*a\s*pagar\s*R\$\s*([0-9.,]+)`))
 	if nf.ValorTotal == 0 {
 		nf.ValorTotal = extrairNumero(doc.Find(".valor, .totalNFe, .txtMax").Last().Text())
 	}
 
-	doc.Find("#tabResult tr").Each(func(_ int, s *goquery.Selection) {
+	doc.Find("#tabResult tr, .table tr").Each(func(_ int, s *goquery.Selection) {
 		nome := strings.TrimSpace(s.Find(".txtTit").First().Text())
 		if nome == "" || strings.Contains(nome, "Vl. Total") { return }
 
 		nf.Itens = append(nf.Itens, entity.Item{
 			Nome:          strings.Join(strings.Fields(nome), " "),
-			Codigo:        regexBusca(s.Find(".RCod").Text(), `\d+`),
-			Quantidade:    extrairNumero(s.Find(".Rqtd").Text()),
-			Unidade:       strings.TrimSpace(strings.Replace(s.Find(".RUN").Text(), "UN:", "", 1)),
-			PrecoUnitario: extrairNumero(s.Find(".RvlUnit").Text()),
-			PrecoTotal:    extrairNumero(s.Find(".valor").Text()),
+			Codigo:        regexBusca(s.Find(".RCod, .txtCodigo").Text(), `\d+`),
+			Quantidade:    extrairNumero(s.Find(".Rqtd, .txtQtde").Text()),
+			Unidade:       strings.TrimSpace(strings.Replace(s.Find(".RUN, .txtUnidade").Text(), "UN:", "", 1)),
+			PrecoUnitario: extrairNumero(s.Find(".RvlUnit, .txtValor").Text()),
+			PrecoTotal:    extrairNumero(s.Find(".valor, .txtValorTotal").Text()),
 		})
 	})
 	return nf
 }
 
-// --- UTILITÁRIOS ---
-
 func regexBusca(texto, padrao string) string {
 	re := regexp.MustCompile(padrao)
 	m := re.FindStringSubmatch(texto)
 	if len(m) > 1 { return m[1] }
-	if len(m) > 0 { return m[0] }
 	return ""
 }
 
@@ -167,30 +170,23 @@ func normalizarData(dataBruta string) string {
 		t, _ := time.Parse(time.RFC3339, dataBruta)
 		return t.Format("02/01/2006 15:04:05")
 	}
-	return strings.Join(strings.Fields(dataBruta), " ")
+	return dataBruta
 }
 
 func extrairNumero(texto string) float64 {
-    if texto == "" { return 0 }
+	if texto == "" { return 0 }
 
-    // Remove R$, espaços e caracteres não numéricos, exceto vírgula e ponto
-    limpo := strings.Map(func(r rune) rune {
-        if (r >= '0' && r <= '9') || r == ',' || r == '.' { return r }
-        return -1
-    }, texto)
+	limpo := strings.Map(func(r rune) rune {
+		if (r >= '0' && r <= '9') || r == ',' || r == '.' { return r }
+		return -1
+	}, texto)
 
-    if strings.Contains(limpo, ",") && strings.Contains(limpo, ".") {
-        limpo = strings.ReplaceAll(limpo, ".", "") 
-        limpo = strings.Replace(limpo, ",", ".", 1)
-    } else if strings.Contains(limpo, ",") {
-        limpo = strings.Replace(limpo, ",", ".", 1)
-    }
+	// Se tiver vírgula, trata como decimal brasileiro
+	if strings.Contains(limpo, ",") {
+		limpo = strings.ReplaceAll(limpo, ".", "") 
+		limpo = strings.Replace(limpo, ",", ".", 1)
+	}
 
-    v, _ := strconv.ParseFloat(limpo, 64)
-  
-    if v < 1.0 && v > 0 {
-        return v * 10
-    }
-
-    return v
+	v, _ := strconv.ParseFloat(limpo, 64)
+	return v
 }
