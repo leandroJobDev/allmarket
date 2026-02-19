@@ -1,70 +1,83 @@
-```markdown
-# 🛒 AllMarket - Sistema de Gestão de Compras
+Seu README agora precisa refletir a evolução gigante que o projeto teve: saindo de uma "API de extração" para um **Ecossistema de Gestão Financeira** com foco total em UX, mobile e integração com Google Auth.
 
-O **AllMarket** é uma API robusta desenvolvida em **Go (Golang)**, projetada para gerenciar, validar e extrair dados de compras a partir de notas fiscais eletrônicas (NFC-e). O projeto utiliza **Clean Architecture** e conta com persistência em nuvem (NoSQL) e deploy automatizado.
+Aqui está o `README.md` atualizado e muito mais profissional:
+
+---
+
+```markdown
+# 🛒 AllMarket - Ecossistema de Gestão de Notas Fiscais
+
+O **AllMarket** é uma plataforma completa para gestão, validação e organização de compras. Utilizando uma API robusta em **Go (Golang)** com **Clean Architecture**, o sistema transforma URLs de QR Codes da SEFAZ em inteligência de consumo, com persistência em nuvem e uma interface moderna focada no usuário final.
 
 ## 📺 Status do Projeto
-**MVP Funcional - Produção 🚀** A API está hospedada na **Render** e conectada ao **MongoDB Atlas**, processando e armazenando dados reais com alta performance.
+**Versão 2.0 - Produção 🚀** O sistema está operando com **Google Auth**, frontend reativo em **Tailwind CSS** e backend integrado ao **MongoDB Atlas**.
 
 ---
 
 ## 🛠️ Tecnologias e Ferramentas
 
+### Backend (Cérebro)
 * **Linguagem:** Go (Golang) v1.22+
-* **Framework Web:** [Gin Gonic](https://gin-gonic.com/) (Roteamento de alta performance)
-* **Banco de Dados:** [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (Persistência NoSQL em nuvem)
-* **Web Scraping:** [GoQuery](https://github.com/PuerkitoBio/goquery) para parsing de dados da SEFAZ
-* **Frontend:** HTML5, CSS3 (Bootstrap 5) e JavaScript (Fetch API)
-* **Deploy/Hospedagem:** [Render](https://render.com/)
-* **Segurança:** [Godotenv](https://github.com/joho/godotenv) para gestão de variáveis de ambiente
+* **Framework Web:** [Gin Gonic](https://gin-gonic.com/)
+* **Persistência:** [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (NoSQL)
+* **Scraping:** [GoQuery](https://github.com/PuerkitoBio/goquery) para parsing de dados fiscais (SEFAZ)
+
+### Frontend (Interface)
+* **Framework CSS:** [Tailwind CSS](https://tailwindcss.com/) (Design moderno e responsivo)
+* **Autenticação:** [Google Identity Services](https://developers.google.com/identity)
+* **Componentes:** [SweetAlert2](https://sweetalert2.github.io/) para feedbacks visuais premium
 
 ---
 
-## 🏗️ Estrutura do Projeto (Clean Architecture)
+## 🏗️ Arquitetura e Organização
+O projeto segue os princípios de **Clean Architecture**, garantindo que a lógica de negócio seja independente de frameworks e bancos de dados:
 
-O projeto é dividido em camadas independentes para facilitar testes e manutenção:
-
-* **`cmd/api/`**: Ponto de entrada da aplicação. Configura o servidor, carrega variáveis de ambiente e define as rotas.
-* **`internal/entity/`**: Modelos de domínio (`NotaFiscal`, `Item`, `Estabelecimento`) e regras de negócio essenciais.
-* **`internal/usecase/`**: Regras de aplicação. Contém os scrapers especializados e a lógica de orquestração do processamento.
-* **`internal/infrastructure/`**: Adaptadores para serviços externos, como a implementação do repositório **MongoDB**.
+* **`cmd/api/`**: Configuração do servidor e injeção de dependências.
+* **`internal/entity/`**: Regras de negócio puras (Modelos de Nota, Itens e Estabelecimento).
+* **`internal/usecase/`**: Orquestração do processamento e motores de scraping.
+* **`internal/infrastructure/`**: Adaptadores para MongoDB e middlewares de segurança.
 
 ---
 
-## 🚀 Funcionalidades Implementadas
+## 🚀 Funcionalidades de Destaque (UX/UI)
 
-* **Persistência em Nuvem:** Armazenamento automático de notas fiscais no MongoDB Atlas.
-* **Prevenção de Duplicidade:** O sistema valida a chave de acesso para evitar o reprocessamento de notas já existentes no banco.
-* **Segurança de Dados:** Uso de "Cofre" de variáveis de ambiente (`.env`) para proteção de credenciais sensíveis.
-* **CORS Habilitado:** Configuração de middlewares para permitir comunicação segura entre frontend e API.
-* **Suporte Multiestadual:** Extração inteligente de dados para os padrões de Santa Catarina (SC), Pernambuco (PE) e Paraíba (PB).
-* **Health Check:** Rota raiz (`/`) para monitoramento de disponibilidade em tempo real.
+* **Minha Carteira (Sincronizada):** O usuário loga com sua conta Google e tem acesso instantâneo ao seu histórico de compras.
+* **Paginação Inteligente:** Renderização otimizada de compras (4 em 4 itens) para manter a performance e fluidez.
+* **Filtro de Busca Dinâmico:** Localização instantânea de estabelecimentos ou valores dentro do histórico.
+* **Mobile First:** Interface totalmente adaptada para uso em smartphones (estilo extrato bancário).
+* **Ancoragem Inteligente:** Ao selecionar uma nota, o sistema realiza um scroll suave diretamente para os detalhes do cupom.
+* **Prevenção de Conflitos:** Identificação automática de notas já processadas (Status 409).
+
+---
+
+## 📂 Estrutura de Rotas API
+
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/` | Health Check / Status da API |
+| `POST` | `/processar` | Extrai e salva dados de uma nova URL de nota |
+| `GET` | `/historico` | Recupera todas as notas vinculadas a um e-mail |
 
 ---
 
 ## 🧪 Como Rodar o Projeto
 
-### 1. Pré-requisitos
-* Go 1.22 ou superior instalado.
-* Conta no MongoDB Atlas (ou instância local do MongoDB).
-
-### 2. Configuração do Ambiente
+### 1. Configuração do Ambiente
 Crie um arquivo `.env` na raiz do projeto:
 ```text
-MONGO_USER=seu_usuario_atlas
-MONGO_PASS=sua_senha_atlas
+MONGO_USER=seu_usuario
+MONGO_PASS=sua_senha
 PORT=8080
 
 ```
 
-### 3. Execução
+### 2. Execução
 
 ```bash
-# Instalar dependências
-go mod tidy
-
-# Iniciar o servidor
+# Rodar o backend
 go run cmd/api/main.go
+
+# O frontend pode ser aberto diretamente (Live Server) ou via navegador.
 
 ```
 
@@ -72,13 +85,8 @@ go run cmd/api/main.go
 
 ## 📈 Próximos Passos
 
-* [ ] Implementar **Firebase Auth** ou **JWT** para gestão de usuários.
-* [ ] Criar dashboard de comparação de preços entre diferentes estabelecimentos.
-* [ ] Adicionar suporte a OCR para leitura de cupons físicos sem QR Code.
-* [ ] Exportação de relatórios mensais de gastos em PDF/Excel.
-
----
-
-**Desenvolvido com foco em escalabilidade e qualidade de código por Leandro.**
+* [ ] Implementação de Dashboards de gastos mensais.
+* [ ] Exportação de relatórios em PDF/Excel.
+* [ ] Categorização automática de produtos via IA.
 
 ```
