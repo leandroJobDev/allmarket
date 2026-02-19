@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type RequisicaoProcessar struct {
@@ -27,19 +28,18 @@ func main() {
 
 	mongoUser := os.Getenv("MONGO_USER")
 	mongoPass := os.Getenv("MONGO_PASS")
-	port := os.Getenv("PORT")
 
+	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	// CONEXÃO COM MONGODB
 	clusterAddr := "cluster0.5sz7ony.mongodb.net"
 	passEscapada := url.QueryEscape(mongoPass)
 	uri := fmt.Sprintf("mongodb+srv://%s:%s@%s/?appName=Cluster0",
 		mongoUser, passEscapada, clusterAddr)
 
-	repo, err := infrastructure.NewMongoRepository(uri)
+	repo, err := infrastructure.NewNotaFiscalRepository(uri)
 	if err != nil {
 		fmt.Printf("❌ Erro MongoDB: %v\n", err)
 		return
@@ -48,11 +48,11 @@ func main() {
 
 	router := gin.Default()
 
-	// MIDDLEWARE CORS TOTAL
 	router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin, Accept")
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
@@ -60,12 +60,10 @@ func main() {
 		c.Next()
 	})
 
-	// ROTAS
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "AllMarket API Online"})
 	})
 
-	// ROTA DE LOGIN
 	router.POST("/auth/google", func(c *gin.Context) {
 		var req RequisicaoLogin
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -81,9 +79,16 @@ func main() {
 			c.JSON(400, gin.H{"error": "E-mail obrigatório"})
 			return
 		}
+
 		notas, err := repo.ListarPorEmail(strings.ToLower(email))
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Erro histórico"})
+			fmt.Printf("❌ Erro Histórico: %v\n", err)
+			c.JSON(500, gin.H{"error": "Erro ao buscar histórico"})
+			return
+		}
+
+		if notas == nil {
+			c.JSON(200, []interface{}{})
 			return
 		}
 		c.JSON(200, notas)
@@ -98,23 +103,33 @@ func main() {
 
 		nota, err := usecase.ScraperPadraoNacional(req.URL)
 		if err != nil {
+			fmt.Printf("❌ Erro Scraper: %v\n", err)
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
 
 		nota.UsuarioEmail = strings.ToLower(req.Email)
+
 		err = repo.Salvar(nota)
 
-		if err != nil && err.Error() == "esta nota fiscal já foi processada e salva anteriormente" {
-			c.JSON(409, nota)
+		if err != nil {
+			if mongo.IsDuplicateKeyError(err) || strings.Contains(err.Error(), "E11000") {
+				notaExistente, errBusca := repo.BuscarPorChave(nota.Chave)
+				if errBusca == nil {
+					c.JSON(409, notaExistente)
+					return
+				}
+				c.JSON(409, nota)
+				return
+			}
+			fmt.Printf("❌ Erro ao salvar: %v\n", err)
+			c.JSON(500, gin.H{"error": "Erro ao salvar: " + err.Error()})
 			return
 		}
+
 		c.JSON(200, nota)
 	})
 
-	port = os.Getenv("PORT")
-	if port == "" {
-		port = "10000" 
-	}
+	fmt.Println("🚀 Servidor rodando na porta " + port)
 	router.Run(":" + port)
 }
