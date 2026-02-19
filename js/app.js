@@ -1,6 +1,5 @@
 const API_URL = "https://allmarket-api.onrender.com";
 
-// Decodifica o token do Google para pegar e-mail e nome
 function parseJwt(token) {
     var base64Url = token.split('.')[1];
     var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -12,7 +11,6 @@ function handleCredentialResponse(response) {
     localStorage.setItem("user_email", userData.email);
     localStorage.setItem("user_name", userData.name);
     
-    // Avisa o backend
     fetch(`${API_URL}/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -21,15 +19,31 @@ function handleCredentialResponse(response) {
 }
 
 function verificarSessao() {
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+    if (isLocalhost) {
+        if (!localStorage.getItem("user_email")) {
+            localStorage.setItem("user_email", "dev@localhost.com");
+            localStorage.setItem("user_name", "Desenvolvedor Local");
+        }
+    }
+
     const email = localStorage.getItem("user_email");
     if (email) {
-        document.getElementById("login-gate").style.display = "none";
-        document.getElementById("app-content").style.display = "block";
-        document.getElementById("nav-auth").innerHTML = `
-            <span class="badge bg-light text-dark p-2">${email}</span>
-            <a href="#" onclick="sair()" class="text-danger ms-2" style="text-decoration:none">
-                <i class="bi bi-box-arrow-right"></i> Sair
-            </a>`;
+        const loginGate = document.getElementById("login-gate");
+        const appContent = document.getElementById("app-content");
+        const navAuth = document.getElementById("nav-auth") || document.getElementById("nav-auth-section");
+
+        if (loginGate) loginGate.style.display = "none";
+        if (appContent) appContent.style.display = "block";
+        
+        if (navAuth) {
+            navAuth.innerHTML = `
+                <span class="badge bg-light text-dark p-2">${email}</span>
+                <a href="#" onclick="sair()" class="text-danger ms-2" style="text-decoration:none">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>`;
+        }
     }
 }
 
