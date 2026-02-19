@@ -39,7 +39,7 @@ func main() {
 	uri := fmt.Sprintf("mongodb+srv://%s:%s@%s/?appName=Cluster0",
 		mongoUser, passEscapada, clusterAddr)
 
-	repo, err := infrastructure.NewMongoRepository(uri)
+	repo, err := infrastructure.NewNotaFiscalRepository(uri)
 	if err != nil {
 		fmt.Printf("❌ Erro MongoDB: %v\n", err)
 		return
@@ -79,10 +79,16 @@ func main() {
 			c.JSON(400, gin.H{"error": "E-mail obrigatório"})
 			return
 		}
+
 		notas, err := repo.ListarPorEmail(strings.ToLower(email))
 		if err != nil {
 			fmt.Printf("❌ Erro Histórico: %v\n", err)
 			c.JSON(500, gin.H{"error": "Erro ao buscar histórico"})
+			return
+		}
+
+		if notas == nil {
+			c.JSON(200, []interface{}{})
 			return
 		}
 		c.JSON(200, notas)
@@ -108,6 +114,11 @@ func main() {
 
 		if err != nil {
 			if mongo.IsDuplicateKeyError(err) || strings.Contains(err.Error(), "E11000") {
+				notaExistente, errBusca := repo.BuscarPorChave(nota.Chave)
+				if errBusca == nil {
+					c.JSON(409, notaExistente)
+					return
+				}
 				c.JSON(409, nota)
 				return
 			}

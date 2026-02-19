@@ -1,6 +1,9 @@
 const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 const API_URL = isLocal ? "http://localhost:8080" : "https://allmarket-api.onrender.com";
 
+let todasAsNotas = [];
+let notasExibidas = 4;
+
 function verificarSessao() {
     if (isLocal && !localStorage.getItem("user_email")) {
         localStorage.setItem("user_email", "dev@localhost.com");
@@ -8,13 +11,19 @@ function verificarSessao() {
     }
     const email = localStorage.getItem("user_email");
     if (email) {
-        document.getElementById("app-content").classList.remove("hidden");
-        document.getElementById("login-gate").classList.add("hidden");
+        const appContent = document.getElementById("app-content");
+        const loginGate = document.getElementById("login-gate");
+        if (appContent) appContent.classList.remove("hidden");
+        if (loginGate) loginGate.classList.add("hidden");
         const nav = document.getElementById("nav-auth");
         if (nav) {
-            nav.innerHTML = `<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">${email}</span>
-                             <button onclick="sair()" class="ml-2 text-xs text-red-500 font-bold uppercase">Sair</button>`;
+            nav.innerHTML = `
+                <div class="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                    <span class="text-blue-700 text-xs font-bold">${email}</span>
+                    <button onclick="sair()" class="text-[10px] text-red-500 font-black uppercase ml-2 hover:text-red-700">Sair</button>
+                </div>`;
         }
+        carregarHistorico();
     }
 }
 
@@ -23,9 +32,16 @@ const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency',
 async function enviarNota() {
     const url = document.getElementById("urlNota").value;
     const email = localStorage.getItem("user_email");
+    const btn = document.getElementById("btnProcessar");
+    const statusCont = document.getElementById("statusContainer");
+
     if (!url) return Swal.fire("Ops", "Cole a URL da nota!", "warning");
 
-    Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
+    const originalBtnContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerText = "Lendo...";
+
+    Swal.fire({ title: 'Sincronizando...', didOpen: () => Swal.showLoading() });
 
     try {
         const r = await fetch(`${API_URL}/processar`, {
@@ -38,43 +54,132 @@ async function enviarNota() {
 
         if (r.ok || r.status === 409) {
             const nota = data.nota || data;
-
-            // 1. Mostrar container de resultado
-            document.getElementById("res").classList.remove("hidden");
-
-            // 2. Preencher Loja e Endereço
-            document.getElementById("loja").innerText = nota.estabelecimento.nome;
-            document.getElementById("estEndereco").innerText = nota.estabelecimento.endereco;
-            document.getElementById("info-nota").innerText = `Nº ${nota.numero} | EMISSÃO: ${nota.data_emissao}`;
-
-            // 3. ACHAR A CHAVE (Mesmo sem ID no HTML)
-            // Procura a tag <code> que contém o texto de aviso e troca pela chave real
-            const codes = document.getElementsByTagName("code");
-            for (let i = 0; i < codes.length; i++) {
-                if (codes[i].innerText.includes("Verifique") || codes[i].innerText.length > 20) {
-                    codes[i].innerText = nota.chave;
-                }
+            renderizarNota(nota);
+            if (r.status === 409) {
+                if (statusCont) statusCont.classList.add("hidden");
+                Swal.fire("Nota já cadastrada", "Dados carregados da sua carteira.", "info");
+            } else {
+                if (statusCont) statusCont.classList.remove("hidden");
             }
-
-            // 4. Preencher Itens
-            const tbody = document.getElementById("itens");
-            tbody.innerHTML = nota.itens.map(i => `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-5 text-sm">
-                        <span class="block font-black text-gray-800 uppercase">${i.nome}</span>
-                        <span class="text-[10px] text-gray-400">QTD: ${i.quantidade} | UNIT: ${formatarMoeda(i.preco_unitario)}</span>
-                    </td>
-                    <td class="p-5 text-right font-black text-blue-600">
-                        ${formatarMoeda(i.preco_total)}
-                    </td>
-                </tr>
-            `).join('');
-
-            if (r.status === 409) Swal.fire("Nota já cadastrada", "Dados carregados do histórico.", "info");
+            carregarHistorico();
+        } else {
+            Swal.fire("Erro", data.error || "Erro ao processar", "error");
         }
     } catch (e) {
-        Swal.fire("Erro", "Falha ao conectar no servidor.", "error");
+        Swal.fire("Erro", "Falha ao conectar no servidor.");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnContent;
     }
+}
+
+function renderizarNota(nota) {
+    const resDiv = document.getElementById("res");
+    resDiv.classList.remove("hidden");
+    document.getElementById("loja").innerText = nota.estabelecimento.nome;
+    document.getElementById("estEndereco").innerText = nota.estabelecimento.endereco;
+    document.getElementById("info-nota").innerText = `Nº ${nota.numero} | EMISSÃO: ${nota.data_emissao}`;
+    const codes = document.getElementsByTagName("code");
+    for (let i = 0; i < codes.length; i++) { codes[i].innerText = nota.chave; }
+    const tbody = document.getElementById("itens");
+    tbody.innerHTML = nota.itens.map(i => `
+        <tr class="hover:bg-gray-50 transition-colors">
+            <td class="p-5 text-sm">
+                <span class="block font-black text-gray-800 uppercase">${i.nome}</span>
+                <span class="text-[10px] text-gray-400">QTD: ${i.quantidade} | UNIT: ${formatarMoeda(i.preco_unitario)}</span>
+            </td>
+            <td class="p-5 text-right font-black text-blue-600">${formatarMoeda(i.preco_total || i.valor_total)}</td>
+        </tr>`).join('');
+    setTimeout(() => { resDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+}
+
+async function carregarHistorico() {
+    const email = localStorage.getItem("user_email");
+    if (!email) return;
+    try {
+        const response = await fetch(`${API_URL}/historico?email=${email}`);
+        let notas = await response.json();
+        
+        todasAsNotas = notas.sort((a, b) => {
+            const dataA = a.data_emissao.split('/').reverse().join('-');
+            const dataB = b.data_emissao.split('/').reverse().join('-');
+            return dataB.localeCompare(dataA);
+        });
+
+        notasExibidas = 4;
+        renderizarListaPaginada();
+    } catch (error) { console.error(error); }
+}
+
+function renderizarListaPaginada() {
+    const listaHist = document.getElementById('lista-hist');
+    const containerVerMais = document.getElementById('container-ver-mais');
+    const secaoHist = document.getElementById('historicoSec');
+    const contador = document.getElementById('contador-notas');
+    secaoHist.classList.remove("hidden");
+    const notasParaExibir = todasAsNotas.slice(0, notasExibidas);
+    if (contador) contador.innerText = `${todasAsNotas.length} compras salvas`;
+    if (notasParaExibir.length === 0) {
+        listaHist.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400 italic">Sua carteira está vazia.</p>`;
+        containerVerMais.classList.add("hidden");
+        return;
+    }
+    listaHist.innerHTML = notasParaExibir.map((nota, index) => `
+        <div onclick="exibirDetalhesDoObjeto(${index})" 
+             class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm active:bg-blue-50 transition-all cursor-pointer flex justify-between items-center">
+            <div class="flex-1 truncate">
+                <h4 class="font-black text-gray-800 text-sm truncate uppercase">${nota.estabelecimento.nome}</h4>
+                <p class="text-[10px] text-gray-400 font-bold">${nota.data_emissao}</p>
+            </div>
+            <div class="text-right ml-4">
+                <span class="block text-blue-600 font-black text-base">${formatarMoeda(nota.valor_total)}</span>
+                <span class="text-[8px] text-gray-400 uppercase tracking-tighter">${nota.itens.length} itens</span>
+            </div>
+        </div>`).join('');
+    if (todasAsNotas.length > notasExibidas) { containerVerMais.classList.remove("hidden"); } 
+    else { containerVerMais.classList.add("hidden"); }
+}
+
+function mostrarMaisNotas() {
+    notasExibidas += 4;
+    renderizarListaPaginada();
+}
+
+function filtrarHistorico() {
+    const termo = document.getElementById("buscaNota").value.toLowerCase();
+    const filtradas = todasAsNotas.filter(nota => 
+        nota.estabelecimento.nome.toLowerCase().includes(termo) ||
+        nota.valor_total.toString().includes(termo)
+    );
+    const listaHist = document.getElementById('lista-hist');
+    const containerVerMais = document.getElementById('container-ver-mais');
+    if (filtradas.length === 0) {
+        listaHist.innerHTML = `<p class="col-span-full text-center py-10 text-gray-400">Nenhuma compra encontrada.</p>`;
+        containerVerMais.classList.add("hidden");
+        return;
+    }
+    listaHist.innerHTML = filtradas.slice(0, notasExibidas).map((nota) => {
+        const originalIndex = todasAsNotas.findIndex(n => n === nota);
+        return `
+        <div onclick="exibirDetalhesDoObjeto(${originalIndex})" 
+             class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm active:bg-blue-50 transition-all cursor-pointer flex justify-between items-center">
+            <div class="flex-1 truncate">
+                <h4 class="font-black text-gray-800 text-sm truncate uppercase">${nota.estabelecimento.nome}</h4>
+                <p class="text-[10px] text-gray-400 font-bold">${nota.data_emissao}</p>
+            </div>
+            <div class="text-right ml-4">
+                <span class="block text-blue-600 font-black text-base">${formatarMoeda(nota.valor_total)}</span>
+                <span class="text-[8px] text-gray-400 uppercase tracking-tighter">${nota.itens.length} itens</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function exibirDetalhesDoObjeto(index) {
+    const nota = todasAsNotas[index];
+    const statusCont = document.getElementById("statusContainer");
+    if (statusCont) statusCont.classList.add("hidden");
+    renderizarNota(nota);
 }
 
 function sair() { localStorage.clear(); location.reload(); }

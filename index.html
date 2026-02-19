@@ -29,17 +29,21 @@
     <div id="app-content" class="max-w-4xl mx-auto p-4 md:p-8 hidden">
 
         <header class="text-center mb-10">
-            <h1 class="text-5xl font-black text-blue-600 mb-2">AllMarket</h1>
-            <p class="text-gray-500 text-lg">Seu extrator de dados NoSQL inteligente</p>
+            <h1 class="text-5xl font-black text-blue-900 mb-2 tracking-tighter">
+                AllMarket
+            </h1>
+            <p class="text-gray-500 text-lg font-medium">
+                Gestão Inteligente de Notas e Organização de Compras
+            </p>
 
             <button onclick="carregarHistorico()"
-                class="mt-4 text-xs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-widest flex items-center justify-center gap-2 mx-auto transition-all bg-blue-50 px-4 py-2 rounded-full">
+                class="mt-6 text-xs font-bold text-blue-700 hover:bg-blue-100 uppercase tracking-widest flex items-center justify-center gap-2 mx-auto transition-all bg-blue-50 border border-blue-200 px-6 py-3 rounded-full shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                VER MEU HISTÓRICO
+                Acessar Histórico de Compras
             </button>
         </header>
 
@@ -62,16 +66,44 @@
         </div>
 
         <div id="historicoSec" class="hidden mb-12">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-black text-gray-700 uppercase tracking-tight">Notas no Banco</h3>
-                <button onclick="document.getElementById('historicoSec').classList.add('hidden')"
-                    class="text-gray-400 hover:text-red-500 font-bold">FECHAR ×</button>
+            <div class="flex flex-col gap-4 mb-6 border-b border-gray-100 pb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-600 p-2 rounded-lg shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-black text-blue-900 tracking-tighter uppercase">Minha Carteira</h3>
+                            <p id="contador-notas"
+                                class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Sincronizado</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('historicoSec').classList.add('hidden')"
+                        class="text-gray-400 hover:text-red-500 font-bold text-xs bg-gray-100 px-3 py-1 rounded-full transition-colors">
+                        FECHAR ×
+                    </button>
+                </div>
+
+                <input type="text" id="buscaNota" onkeyup="filtrarHistorico()"
+                    placeholder="Buscar loja no seu histórico..."
+                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 shadow-sm transition-all">
             </div>
-            <div id="lista-hist" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+            <div id="lista-hist" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+
+            <div id="container-ver-mais" class="mt-6 text-center hidden">
+                <button onclick="mostrarMaisNotas()"
+                    class="bg-white border border-blue-200 text-blue-600 font-bold py-3 px-8 rounded-full text-xs hover:bg-blue-50 transition-all shadow-sm">
+                    CARREGAR COMPRAS ANTERIORES
+                </button>
+            </div>
         </div>
 
         <div id="res" class="hidden space-y-6 pb-20">
-
             <div class="bg-white p-8 rounded-2xl shadow-lg border-t-8 border-blue-600 relative overflow-hidden">
                 <div class="absolute top-0 right-0 p-4 opacity-10">
                     <svg width="100" height="100" fill="currentColor" viewBox="0 0 24 24">
@@ -87,8 +119,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-100">
                         <div>
                             <span class="text-[10px] uppercase font-bold text-gray-400 block">Chave de Acesso</span>
-                            <code
-                                class="text-xs bg-gray-50 p-1 rounded text-gray-600">Verifique no portal da SEFAZ</code>
+                            <code class="text-xs bg-gray-50 p-1 rounded text-gray-600">Carregando chave...</code>
                         </div>
                     </div>
                 </div>
@@ -98,17 +129,18 @@
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-blue-50 text-blue-900">
                         <tr>
-                            <th class="p-5 font-black uppercase text-xs">Produto</th>
-                            <th class="p-5 text-right font-black uppercase text-xs">Total</th>
+                            <th class="p-5 font-black uppercase text-xs italic opacity-70">Itens do Cupom</th>
+                            <th class="p-5 text-right font-black uppercase text-xs italic opacity-70">Total</th>
                         </tr>
                     </thead>
                     <tbody id="itens" class="divide-y divide-gray-100"></tbody>
                 </table>
             </div>
 
-            <div class="bg-gray-900 text-white p-8 rounded-2xl shadow-2xl flex justify-between items-center">
-                <span class="text-xl font-bold opacity-70">STATUS:</span>
-                <span class="text-green-400 font-black">PROCESSADA</span>
+            <div id="statusContainer"
+                class="hidden bg-gray-900 text-white p-8 rounded-2xl shadow-2xl flex justify-between items-center">
+                <span class="text-xl font-bold opacity-70 uppercase tracking-tighter">Status do Processamento:</span>
+                <span class="text-green-400 font-black">CONCLUÍDO</span>
             </div>
         </div>
     </div>

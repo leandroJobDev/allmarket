@@ -6,7 +6,6 @@ require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/gin-gonic/gin v1.11.0
 	github.com/joho/godotenv v1.5.1
-	go.mongodb.org/mongo-driver v1.17.9
 	go.mongodb.org/mongo-driver/v2 v2.5.0
 )
 
