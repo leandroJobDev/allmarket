@@ -36,7 +36,7 @@ func main() {
 	// CONEXÃO COM MONGODB
 	clusterAddr := "cluster0.5sz7ony.mongodb.net"
 	passEscapada := url.QueryEscape(mongoPass)
-	uri := fmt.Sprintf("mongodb+srv://%s:%s@%s/?appName=Cluster0", 
+	uri := fmt.Sprintf("mongodb+srv://%s:%s@%s/?appName=Cluster0",
 		mongoUser, passEscapada, clusterAddr)
 
 	repo, err := infrastructure.NewMongoRepository(uri)
@@ -65,7 +65,7 @@ func main() {
 		c.JSON(200, gin.H{"status": "AllMarket API Online"})
 	})
 
-	// ROTA DE LOGIN 
+	// ROTA DE LOGIN
 	router.POST("/auth/google", func(c *gin.Context) {
 		var req RequisicaoLogin
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -95,16 +95,16 @@ func main() {
 			c.JSON(400, gin.H{"error": "Dados inválidos"})
 			return
 		}
-		
+
 		nota, err := usecase.ScraperPadraoNacional(req.URL)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		
+
 		nota.UsuarioEmail = strings.ToLower(req.Email)
 		err = repo.Salvar(nota)
-		
+
 		if err != nil && err.Error() == "esta nota fiscal já foi processada e salva anteriormente" {
 			c.JSON(409, nota)
 			return
@@ -112,5 +112,9 @@ func main() {
 		c.JSON(200, nota)
 	})
 
+	port = os.Getenv("PORT")
+	if port == "" {
+		port = "10000" 
+	}
 	router.Run(":" + port)
 }
