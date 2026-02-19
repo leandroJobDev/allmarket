@@ -1,77 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>AllMarket | Gestão de Compras</title>
-
+    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-
-    <style>
-        :root {
-            --primary-color: #0d6efd;
-        }
-
-        body {
-            background-color: #f0f2f5;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-
-        .navbar {
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        #app-content {
-            display: none;
-        }
-
-        #login-gate {
-            display: flex;
-            min-height: 80vh;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .nav-pills .nav-link {
-            border-radius: 10px;
-            font-weight: 500;
-            color: #666;
-        }
-
-        .nav-pills .nav-link.active {
-            background-color: var(--primary-color);
-        }
-
-        .history-card {
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-
-        .history-card:hover {
-            transform: translateY(-3px);
-        }
-
-        .user-badge {
-            background: #e9ecef;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
     <nav class="navbar navbar-expand-lg sticky-top mb-4">
@@ -82,7 +23,6 @@
     </nav>
 
     <div class="container">
-
         <div id="login-gate">
             <div class="card p-5 text-center shadow-lg" style="max-width: 450px;">
                 <div class="mb-4"><i class="bi bi-shield-lock-fill text-primary" style="font-size: 3rem;"></i></div>
@@ -97,15 +37,13 @@
             </div>
         </div>
 
-        <div id="app-content">
+        <div id="app-content" style="display: none;">
             <ul class="nav nav-pills justify-content-center mb-4" id="pills-tab" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#sessao-nova"><i
-                            class="bi bi-plus-circle"></i> Nova Nota</button>
+                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#sessao-nova"><i class="bi bi-plus-circle"></i> Nova Nota</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#sessao-historico"
-                        onclick="carregarHistorico()"><i class="bi bi-clock-history"></i> Meu Histórico</button>
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#sessao-historico" onclick="carregarHistorico()"><i class="bi bi-clock-history"></i> Meu Histórico</button>
                 </li>
             </ul>
 
@@ -116,25 +54,19 @@
                             <div class="card p-4 mb-4">
                                 <h5 class="mb-3 fw-bold">Processar Nota Fiscal</h5>
                                 <div class="input-group">
-                                    <input type="text" id="urlNota" class="form-control"
-                                        placeholder="Cole o link da nota aqui...">
+                                    <input type="text" id="urlNota" class="form-control" placeholder="Cole o link da nota aqui...">
                                     <button class="btn btn-primary" onclick="enviarNota()">Processar</button>
                                 </div>
                             </div>
                             <div id="resultado" class="card p-4 shadow-sm" style="display: none;">
                                 <h4 id="estabelecimento-nome" class="text-primary fw-bold"></h4>
-                                <p class="text-muted"><i class="bi bi-calendar-check"></i> <span id="nota-data"></span>
-                                </p>
+                                <p class="text-muted"><i class="bi bi-calendar-check"></i> <span id="nota-data"></span></p>
                                 <h5 class="text-end fw-bold">Total: R$ <span id="nota-total"></span></h5>
                                 <hr>
                                 <div class="table-responsive">
                                     <table class="table table-sm">
                                         <thead>
-                                            <tr>
-                                                <th>Item</th>
-                                                <th class="text-center">Qtd</th>
-                                                <th class="text-end">Preço</th>
-                                            </tr>
+                                            <tr><th>Item</th><th class="text-center">Qtd</th><th class="text-end">Preço</th></tr>
                                         </thead>
                                         <tbody id="itens-tabela"></tbody>
                                     </table>
@@ -147,8 +79,7 @@
                 <div class="tab-pane fade" id="sessao-historico">
                     <div class="row justify-content-center">
                         <div class="col-md-10">
-                            <div id="lista-historico" class="row">
-                            </div>
+                            <div id="lista-historico" class="row"></div>
                         </div>
                     </div>
                 </div>
@@ -156,104 +87,9 @@
         </div>
     </div>
 
-    <script>
-        const API_URL = "https://allmarket-api.onrender.com";
-
-        function verificarSessao() {
-            const email = localStorage.getItem("user_email");
-            const name = localStorage.getItem("user_name");
-            if (email) {
-                document.getElementById("login-gate").style.display = "none";
-                document.getElementById("app-content").style.display = "block";
-                document.getElementById("nav-auth-section").innerHTML = `
-                <span class="user-badge"><i class="bi bi-person"></i> ${name}</span>
-                <button onclick="logout()" class="btn btn-link text-danger btn-sm fw-bold">Sair</button>`;
-            } else {
-                document.getElementById("login-gate").style.display = "flex";
-                document.getElementById("app-content").style.display = "none";
-            }
-        }
-
-        function handleCredentialResponse(response) {
-            fetch(`${API_URL}/auth/google`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token: response.credential })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    localStorage.setItem("user_email", data.email);
-                    localStorage.setItem("user_name", data.name);
-                    verificarSessao();
-                    Swal.fire({ icon: 'success', title: 'Olá!', text: data.name, timer: 1500 });
-                });
-        }
-
-        async function enviarNota() {
-            const url = document.getElementById("urlNota").value;
-            const email = localStorage.getItem("user_email");
-            if (!url) return Swal.fire('Aviso', 'Cole a URL da nota', 'info');
-
-            Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
-
-            try {
-                const res = await fetch(`${API_URL}/processar`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ url: url, email: email })
-                });
-                const data = await res.json();
-                Swal.close();
-                if (res.status === 200 || res.status === 409) {
-                    mostrarDados(data);
-                    if (res.status === 409) Swal.fire('Nota já existe', 'Essa nota já estava no seu histórico.', 'info');
-                } else {
-                    Swal.fire('Erro', data.error, 'error');
-                }
-            } catch (e) { Swal.fire('Erro', 'Falha na conexão', 'error'); }
-        }
-
-        function mostrarDados(nota) {
-            document.getElementById("resultado").style.display = "block";
-            document.getElementById("estabelecimento-nome").innerText = nota.estabelecimento.nome;
-            document.getElementById("nota-data").innerText = nota.data_emissao;
-            document.getElementById("nota-total").innerText = nota.valor_total.toFixed(2);
-            const tabela = document.getElementById("itens-tabela");
-            tabela.innerHTML = nota.itens.map(i => `
-            <tr><td>${i.nome}</td><td class="text-center">${i.quantidade}</td><td class="text-end">R$ ${i.preco_total.toFixed(2)}</td></tr>
-        `).join('');
-        }
-
-        async function carregarHistorico() {
-            const email = localStorage.getItem("user_email");
-            const container = document.getElementById("lista-historico");
-            container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
-
-            try {
-                const res = await fetch(`${API_URL}/historico?email=${email}`);
-                const notas = await res.json();
-                if (notas.length === 0) {
-                    container.innerHTML = '<p class="text-center mt-5">Nenhuma nota salva ainda.</p>';
-                    return;
-                }
-                container.innerHTML = notas.map(n => `
-                <div class="col-md-6 mb-3">
-                    <div class="card p-3 history-card border-start border-primary border-4">
-                        <div class="d-flex justify-content-between">
-                            <h6 class="fw-bold mb-1 text-truncate" style="max-width: 70%">${n.estabelecimento.nome}</h6>
-                            <span class="text-primary fw-bold">R$ ${n.valor_total.toFixed(2)}</span>
-                        </div>
-                        <small class="text-muted"><i class="bi bi-calendar"></i> ${n.data_emissao}</small>
-                        <div class="mt-2"><small class="badge bg-light text-dark">${n.itens.length} itens</small></div>
-                    </div>
-                </div>
-            `).join('');
-            } catch (e) { container.innerHTML = '<p class="text-danger text-center">Erro ao carregar histórico.</p>'; }
-        }
-
-        function logout() { localStorage.clear(); location.reload(); }
-        window.onload = verificarSessao;
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="js/app.js"></script>
 </body>
-
 </html>
