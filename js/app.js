@@ -15,7 +15,7 @@ window.handleCredentialResponse = (response) => {
     location.reload();
 };
 
-async function configurarGoogleLogin() {
+async function iniciarLoginGoogle() {
     try {
         const r = await fetch(`${API_URL}/config`);
         const config = await r.json();
@@ -23,8 +23,8 @@ async function configurarGoogleLogin() {
             google.accounts.id.initialize({
                 client_id: config.google_client_id,
                 callback: window.handleCredentialResponse,
-                auto_prompt: false,
-                itp_support: true
+                ux_mode: 'popup',
+                use_fedcm_for_prompt: false
             });
             google.accounts.id.renderButton(
                 document.getElementById("google-btn-container"),
@@ -33,6 +33,7 @@ async function configurarGoogleLogin() {
         }
     } catch (e) { console.error(e); }
 }
+
 
 function verificarSessao() {
     const email = localStorage.getItem("user_email");
@@ -185,7 +186,7 @@ function renderizarListaPaginada() {
                 <span class="text-[8px] text-gray-400 uppercase tracking-tighter">${nota.itens.length} itens</span>
             </div>
         </div>`).join('');
-    if (todasAsNotas.length > notasExibidas) { containerVerMais.classList.remove("hidden"); } 
+    if (todasAsNotas.length > notasExibidas) { containerVerMais.classList.remove("hidden"); }
     else { containerVerMais.classList.add("hidden"); }
 }
 
@@ -196,7 +197,7 @@ function mostrarMaisNotas() {
 
 function filtrarHistorico() {
     const termo = document.getElementById("buscaNota").value.toLowerCase();
-    const filtradas = todasAsNotas.filter(nota => 
+    const filtradas = todasAsNotas.filter(nota =>
         nota.estabelecimento.nome.toLowerCase().includes(termo) ||
         nota.valor_total.toString().includes(termo)
     );
