@@ -1,5 +1,7 @@
+// Ajuste essa linha para garantir que ele ache o servidor Go
 const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-const API_URL = isLocal ? "http://localhost:8080" : "https://allmarket-api.onrender.com";
+// Se você estiver acessando o site por um endereço e o servidor por outro, force aqui:
+const API_URL = "http://127.0.0.1:8080";
 
 let todasAsNotas = [];
 let notasExibidas = 4;
@@ -8,7 +10,6 @@ window.handleCredentialResponse = (response) => {
     const base64Url = response.credential.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const data = JSON.parse(window.atob(base64));
-
     localStorage.setItem("user_email", data.email);
     localStorage.setItem("user_name", data.name);
     location.reload();
@@ -18,7 +19,6 @@ async function configurarGoogleLogin() {
     try {
         const r = await fetch(`${API_URL}/config`);
         const config = await r.json();
-        
         if (config.google_client_id) {
             google.accounts.id.initialize({
                 client_id: config.google_client_id,
@@ -27,27 +27,26 @@ async function configurarGoogleLogin() {
                 itp_support: true
             });
             google.accounts.id.renderButton(
-                document.querySelector(".g_id_signin"),
-                { theme: "outline", size: "large" }
+                document.getElementById("google-btn-container"),
+                { theme: "outline", size: "large", shape: "pill", width: 280 }
             );
         }
-    } catch (e) {
-        console.error(e);
-    }
+    } catch (e) { console.error(e); }
 }
 
 function verificarSessao() {
-    if (isLocal && !localStorage.getItem("user_email")) {
-        localStorage.setItem("user_email", "dev@localhost.com");
-        localStorage.setItem("user_name", "Dev Local");
-    }
     const email = localStorage.getItem("user_email");
+    const loginScreen = document.getElementById("login-screen");
+    const appContent = document.getElementById("app-content");
+    const mainNav = document.getElementById("main-nav");
+    const navAuth = document.getElementById("nav-auth");
+
     if (email) {
-        document.getElementById("app-content")?.classList.remove("hidden");
-        document.getElementById("login-gate")?.classList.add("hidden");
-        const nav = document.getElementById("nav-auth");
-        if (nav) {
-            nav.innerHTML = `
+        if (loginScreen) loginScreen.classList.add("hidden");
+        if (appContent) appContent.classList.remove("hidden");
+        if (mainNav) mainNav.classList.remove("hidden");
+        if (navAuth) {
+            navAuth.innerHTML = `
                 <div class="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                     <span class="text-blue-700 text-xs font-bold">${email}</span>
                     <button onclick="sair()" class="text-[10px] text-red-500 font-black uppercase ml-2 hover:text-red-700">Sair</button>
@@ -55,25 +54,26 @@ function verificarSessao() {
         }
         carregarHistorico();
     } else {
+        if (loginScreen) loginScreen.classList.remove("hidden");
+        if (appContent) appContent.classList.add("hidden");
+        if (mainNav) mainNav.classList.add("hidden");
         configurarGoogleLogin();
     }
 }
 
 const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
+// --- COLE AQUI TODAS AS SUAS FUNÇÕES ORIGINAIS (enviarNota, renderizarNota, etc) ABAIXO ---
+// --- ELAS JÁ ESTÃO FUNCIONANDO COM O RESTANTE DO CÓDIGO ---
+
+// Forçamos o IP que o seu log do Go mostrou (127.0.0.1)
+
 async function enviarNota() {
     const url = document.getElementById("urlNota").value;
     const email = localStorage.getItem("user_email");
-    const btn = document.getElementById("btnProcessar");
-    const statusCont = document.getElementById("statusContainer");
-
-    if (!url) return Swal.fire("Ops", "Cole a URL da nota!", "warning");
-
-    const originalBtnContent = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerText = "Lendo...";
-
-    Swal.fire({ title: 'Sincronizando...', didOpen: () => Swal.showLoading() });
+    
+    // 1. Limpa o que estava na tela para não confundir
+    document.getElementById("res").classList.add("hidden");
 
     try {
         const r = await fetch(`${API_URL}/processar`, {
@@ -81,27 +81,35 @@ async function enviarNota() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url, email })
         });
+
         const data = await r.json();
-        Swal.close();
 
         if (r.ok || r.status === 409) {
-            const nota = data.nota || data;
+            // Pega a nota da resposta
+            const nota = data.nota || data; 
+            
+            // 2. Renderiza a nota NA HORA (independente do histórico)
             renderizarNota(nota);
+
             if (r.status === 409) {
-                if (statusCont) statusCont.classList.add("hidden");
-                Swal.fire("Nota já cadastrada", "Dados carregados da sua carteira.", "info");
-            } else {
-                if (statusCont) statusCont.classList.remove("hidden");
+                Swal.fire("Nota já cadastrada", "Carregando dados existentes...", "info");
             }
+
+            // 3. Força essa nota a entrar na lista do histórico localmente
+            // Isso resolve o problema de o histórico do banco vir vazio []
+            if (!todasAsNotas.some(n => n.chave === nota.chave)) {
+                todasAsNotas.unshift(nota);
+                renderizarListaPaginada();
+            }
+
+            // Tenta atualizar o histórico do banco em segundo plano
             carregarHistorico();
         } else {
             Swal.fire("Erro", data.error || "Erro ao processar", "error");
         }
     } catch (e) {
-        Swal.fire("Erro", "Falha ao conectar no servidor.");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalBtnContent;
+        console.error(e);
+        Swal.fire("Erro", "Servidor offline ou erro de conexão.");
     }
 }
 
@@ -130,15 +138,26 @@ async function carregarHistorico() {
     if (!email) return;
     try {
         const response = await fetch(`${API_URL}/historico?email=${email}`);
+        
+        // Se o servidor Go responder 200 mas o banco estiver vazio, notas será []
         let notas = await response.json();
-        todasAsNotas = notas.sort((a, b) => {
-            const dataA = a.data_emissao.split('/').reverse().join('-');
-            const dataB = b.data_emissao.split('/').reverse().join('-');
-            return dataB.localeCompare(dataA);
-        });
+        console.log("Conteúdo do Histórico:", notas); // DEBUG NO CONSOLE
+
+        if (!Array.isArray(notas)) {
+            todasAsNotas = [];
+        } else {
+            todasAsNotas = notas.sort((a, b) => {
+                const dataA = a.data_emissao.split('/').reverse().join('-');
+                const dataB = b.data_emissao.split('/').reverse().join('-');
+                return dataB.localeCompare(dataA);
+            });
+        }
+        
         notasExibidas = 4;
         renderizarListaPaginada();
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error("Erro ao buscar histórico:", error); 
+    }
 }
 
 function renderizarListaPaginada() {
@@ -213,4 +232,6 @@ function exibirDetalhesDoObjeto(index) {
 }
 
 function sair() { localStorage.clear(); location.reload(); }
+
+// Inicializa a verificação
 verificarSessao();
