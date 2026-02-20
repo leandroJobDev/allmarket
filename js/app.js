@@ -18,21 +18,23 @@ async function configurarGoogleLogin() {
     try {
         const r = await fetch(`${API_URL}/config`);
         const config = await r.json();
-        
+
         if (config.google_client_id) {
             google.accounts.id.initialize({
                 client_id: config.google_client_id,
                 callback: window.handleCredentialResponse,
                 auto_prompt: false,
-                itp_support: true
+                itp_support: true,
+                use_fedcm_for_prompt: false
             });
+
             google.accounts.id.renderButton(
                 document.querySelector(".g_id_signin"),
-                { theme: "outline", size: "large" }
+                { theme: "outline", size: "large", text: "signin_with" }
             );
         }
     } catch (e) {
-        console.error(e);
+        console.error("Erro ao configurar Google:", e);
     }
 }
 
@@ -166,7 +168,7 @@ function renderizarListaPaginada() {
                 <span class="text-[8px] text-gray-400 uppercase tracking-tighter">${nota.itens.length} itens</span>
             </div>
         </div>`).join('');
-    if (todasAsNotas.length > notasExibidas) { containerVerMais.classList.remove("hidden"); } 
+    if (todasAsNotas.length > notasExibidas) { containerVerMais.classList.remove("hidden"); }
     else { containerVerMais.classList.add("hidden"); }
 }
 
@@ -177,7 +179,7 @@ function mostrarMaisNotas() {
 
 function filtrarHistorico() {
     const termo = document.getElementById("buscaNota").value.toLowerCase();
-    const filtradas = todasAsNotas.filter(nota => 
+    const filtradas = todasAsNotas.filter(nota =>
         nota.estabelecimento.nome.toLowerCase().includes(termo) ||
         nota.valor_total.toString().includes(termo)
     );
