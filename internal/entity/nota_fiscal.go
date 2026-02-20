@@ -21,16 +21,15 @@ type Item struct {
 }
 
 type NotaFiscal struct {
-	// O segredo está aqui: usar bson.ObjectID da V2
-	ID              bson.ObjectID   `bson:"_id,omitempty" json:"id"`
-	UsuarioEmail    string          `bson:"usuario_email" json:"usuario_email"`
-	Chave           string          `bson:"chave" json:"chave"`
-	Numero          string          `bson:"numero" json:"numero"`
-	Serie           string          `bson:"serie" json:"serie"`
-	DataEmissao     string          `bson:"data_emissao" json:"data_emissao"`
-	Estabelecimento Estabelecimento `bson:"estabelecimento" json:"estabelecimento"`
-	Itens           []Item          `bson:"itens" json:"itens"`
-	ValorTotal      float64         `bson:"valor_total" json:"valor_total"`
+    ID              bson.ObjectID   `bson:"_id,omitempty" json:"id"`
+    UsuarioEmail    string          `bson:"usuario_email" json:"usuario_email"`
+    Chave           string          `bson:"chave" json:"chave"`
+    Numero          string          `bson:"numero" json:"numero"`
+    Serie           string          `bson:"serie" json:"serie"`
+    DataEmissao     string          `bson:"data_emissao" json:"data_emissao"`
+    Estabelecimento Estabelecimento `bson:"estabelecimento" json:"estabelecimento"`
+    Itens           []Item          `bson:"itens" json:"itens"`
+    ValorTotal      float64         `bson:"valor_total" json:"valor_total"`
 }
 
 func (n NotaFiscal) CalcularTotalDosItens() float64 {

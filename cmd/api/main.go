@@ -48,6 +48,7 @@ func main() {
 
 	router := gin.Default()
 
+	// MIDDLEWARE DE CORS ATUALIZADO
 	router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
@@ -74,25 +75,30 @@ func main() {
 	})
 
 	router.GET("/historico", func(c *gin.Context) {
-		email := c.Query("email")
-		if email == "" {
-			c.JSON(400, gin.H{"error": "E-mail obrigatório"})
-			return
-		}
+        email := c.Query("email")
+        fmt.Printf("🔍 Buscando histórico para o e-mail: [%s]\n", email) // Log de debug
 
-		notas, err := repo.ListarPorEmail(strings.ToLower(email))
-		if err != nil {
-			fmt.Printf("❌ Erro Histórico: %v\n", err)
-			c.JSON(500, gin.H{"error": "Erro ao buscar histórico"})
-			return
-		}
+        if email == "" {
+            c.JSON(400, gin.H{"error": "E-mail obrigatório"})
+            return
+        }
 
-		if notas == nil {
-			c.JSON(200, []interface{}{})
-			return
-		}
-		c.JSON(200, notas)
-	})
+        // Teste: buscar sem o ToLower para ver se o banco gravou com letra maiúscula
+        notas, err := repo.ListarPorEmail(email) 
+        if err != nil {
+            fmt.Printf("❌ Erro no Banco: %v\n", err)
+            c.JSON(500, gin.H{"error": "Erro ao buscar histórico"})
+            return
+        }
+
+        fmt.Printf("✅ Notas encontradas: %d\n", len(notas)) // Isso vai aparecer no seu terminal
+        
+        if notas == nil {
+            c.JSON(200, []interface{}{})
+            return
+        }
+        c.JSON(200, notas)
+    })
 
 	router.GET("/config", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -107,6 +113,7 @@ func main() {
 			return
 		}
 
+		// 1. Faz o Scraping da Nota
 		nota, err := usecase.ScraperPadraoNacional(req.URL)
 		if err != nil {
 			fmt.Printf("❌ Erro Scraper: %v\n", err)
@@ -114,14 +121,26 @@ func main() {
 			return
 		}
 
-		nota.UsuarioEmail = strings.ToLower(req.Email)
+		userEmail := strings.ToLower(req.Email)
+		nota.UsuarioEmail = userEmail
 
+		// 2. Tenta salvar no banco
 		err = repo.Salvar(nota)
 
 		if err != nil {
+			// Caso a nota já exista no banco (Chave duplicada)
 			if mongo.IsDuplicateKeyError(err) || strings.Contains(err.Error(), "E11000") {
+				
 				notaExistente, errBusca := repo.BuscarPorChave(nota.Chave)
 				if errBusca == nil {
+					// LÓGICA DE ATUALIZAÇÃO DE PROPRIEDADE:
+					// Se a nota existe mas está com outro e-mail (ou sem e-mail), 
+					// nós atualizamos ela para o e-mail atual do Google.
+					if notaExistente.UsuarioEmail != userEmail {
+						fmt.Printf("🔄 Atualizando dono da nota %s para %s\n", nota.Chave, userEmail)
+						notaExistente.UsuarioEmail = userEmail
+						_ = repo.Salvar(notaExistente) // Atualiza no banco
+					}
 					c.JSON(409, notaExistente)
 					return
 				}
