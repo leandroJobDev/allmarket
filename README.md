@@ -1,10 +1,3 @@
-Seu README agora precisa refletir a evolução gigante que o projeto teve: saindo de uma "API de extração" para um **Ecossistema de Gestão Financeira** com foco total em UX, mobile e integração com Google Auth.
-
-Aqui está o `README.md` atualizado e muito mais profissional:
-
----
-
-```markdown
 # 🛒 AllMarket - Ecossistema de Gestão de Notas Fiscais
 
 O **AllMarket** é uma plataforma completa para gestão, validação e organização de compras. Utilizando uma API robusta em **Go (Golang)** com **Clean Architecture**, o sistema transforma URLs de QR Codes da SEFAZ em inteligência de consumo, com persistência em nuvem e uma interface moderna focada no usuário final.
