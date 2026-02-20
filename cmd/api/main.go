@@ -94,6 +94,12 @@ func main() {
 		c.JSON(200, notas)
 	})
 
+	router.GET("/config", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"google_client_id": os.Getenv("GOOGLE_CLIENT_ID"),
+		})
+	})
+
 	router.POST("/processar", func(c *gin.Context) {
 		var req RequisicaoProcessar
 		if err := c.ShouldBindJSON(&req); err != nil {

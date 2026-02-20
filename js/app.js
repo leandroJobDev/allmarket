@@ -4,6 +4,38 @@ const API_URL = isLocal ? "http://localhost:8080" : "https://allmarket-api.onren
 let todasAsNotas = [];
 let notasExibidas = 4;
 
+window.handleCredentialResponse = (response) => {
+    const base64Url = response.credential.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const data = JSON.parse(window.atob(base64));
+
+    localStorage.setItem("user_email", data.email);
+    localStorage.setItem("user_name", data.name);
+    location.reload();
+};
+
+async function configurarGoogleLogin() {
+    try {
+        const r = await fetch(`${API_URL}/config`);
+        const config = await r.json();
+        
+        if (config.google_client_id) {
+            google.accounts.id.initialize({
+                client_id: config.google_client_id,
+                callback: window.handleCredentialResponse,
+                auto_prompt: false,
+                itp_support: true
+            });
+            google.accounts.id.renderButton(
+                document.querySelector(".g_id_signin"),
+                { theme: "outline", size: "large" }
+            );
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
 function verificarSessao() {
     if (isLocal && !localStorage.getItem("user_email")) {
         localStorage.setItem("user_email", "dev@localhost.com");
@@ -11,10 +43,8 @@ function verificarSessao() {
     }
     const email = localStorage.getItem("user_email");
     if (email) {
-        const appContent = document.getElementById("app-content");
-        const loginGate = document.getElementById("login-gate");
-        if (appContent) appContent.classList.remove("hidden");
-        if (loginGate) loginGate.classList.add("hidden");
+        document.getElementById("app-content")?.classList.remove("hidden");
+        document.getElementById("login-gate")?.classList.add("hidden");
         const nav = document.getElementById("nav-auth");
         if (nav) {
             nav.innerHTML = `
@@ -24,6 +54,8 @@ function verificarSessao() {
                 </div>`;
         }
         carregarHistorico();
+    } else {
+        configurarGoogleLogin();
     }
 }
 
@@ -99,13 +131,11 @@ async function carregarHistorico() {
     try {
         const response = await fetch(`${API_URL}/historico?email=${email}`);
         let notas = await response.json();
-        
         todasAsNotas = notas.sort((a, b) => {
             const dataA = a.data_emissao.split('/').reverse().join('-');
             const dataB = b.data_emissao.split('/').reverse().join('-');
             return dataB.localeCompare(dataA);
         });
-
         notasExibidas = 4;
         renderizarListaPaginada();
     } catch (error) { console.error(error); }
