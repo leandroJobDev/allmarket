@@ -17,11 +17,13 @@
             <div id="nav-auth" class="flex items-center gap-2"></div>
 
             <div id="login-gate">
-                <div id="g_id_onload"
-                    data-client_id="570724598871-n23jsilb8ncvfv2ve6b848q327fgdav9.apps.googleusercontent.com"
-                    data-callback="handleCredentialResponse">
-                </div>
-                <div class="g_id_signin" data-type="standard"></div>
+                <button onclick="iniciarLoginGoogle()"
+                    class="flex items-center gap-2 bg-white border border-gray-300 px-4 py-2 rounded-lg font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"
+                        alt="Google">
+                    Entrar com Google
+                </button>
+                <div id="google-btn-container" class="hidden"></div>
             </div>
         </div>
     </nav>

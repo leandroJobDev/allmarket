@@ -14,27 +14,36 @@ window.handleCredentialResponse = (response) => {
     location.reload();
 };
 
-async function configurarGoogleLogin() {
+async function iniciarLoginGoogle() {
     try {
         const r = await fetch(`${API_URL}/config`);
         const config = await r.json();
-        
+
         if (config.google_client_id) {
             google.accounts.id.initialize({
                 client_id: config.google_client_id,
                 callback: window.handleCredentialResponse,
-                auto_prompt: false,
-                itp_support: true
+                ux_mode: 'popup',
+                use_fedcm_for_prompt: false
             });
-            google.accounts.id.renderButton(
-                document.querySelector(".g_id_signin"),
-                { theme: "outline", size: "large" }
-            );
+
+
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    google.accounts.id.renderButton(
+                        document.getElementById("google-btn-container"),
+                        { theme: "outline", size: "large" }
+                    );
+                    console.log("Prompt ignorado, usando botão alternativo.");
+                }
+            });
         }
     } catch (e) {
-        console.error(e);
+        console.error("Erro na config do Google:", e);
+        Swal.fire("Erro", "Não foi possível conectar ao serviço de login.", "error");
     }
 }
+
 
 function verificarSessao() {
     if (isLocal && !localStorage.getItem("user_email")) {
@@ -54,9 +63,7 @@ function verificarSessao() {
                 </div>`;
         }
         carregarHistorico();
-    } else {
-        configurarGoogleLogin();
-    }
+    } 
 }
 
 const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -166,7 +173,7 @@ function renderizarListaPaginada() {
                 <span class="text-[8px] text-gray-400 uppercase tracking-tighter">${nota.itens.length} itens</span>
             </div>
         </div>`).join('');
-    if (todasAsNotas.length > notasExibidas) { containerVerMais.classList.remove("hidden"); } 
+    if (todasAsNotas.length > notasExibidas) { containerVerMais.classList.remove("hidden"); }
     else { containerVerMais.classList.add("hidden"); }
 }
 
@@ -177,7 +184,7 @@ function mostrarMaisNotas() {
 
 function filtrarHistorico() {
     const termo = document.getElementById("buscaNota").value.toLowerCase();
-    const filtradas = todasAsNotas.filter(nota => 
+    const filtradas = todasAsNotas.filter(nota =>
         nota.estabelecimento.nome.toLowerCase().includes(termo) ||
         nota.valor_total.toString().includes(termo)
     );
