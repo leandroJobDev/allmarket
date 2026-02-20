@@ -14,7 +14,7 @@ window.handleCredentialResponse = (response) => {
     location.reload();
 };
 
-async function configurarGoogleLogin() {
+async function iniciarLoginGoogle() {
     try {
         const r = await fetch(`${API_URL}/config`);
         const config = await r.json();
@@ -23,20 +23,27 @@ async function configurarGoogleLogin() {
             google.accounts.id.initialize({
                 client_id: config.google_client_id,
                 callback: window.handleCredentialResponse,
-                auto_prompt: false,
-                itp_support: true,
+                ux_mode: 'popup',
                 use_fedcm_for_prompt: false
             });
 
-            google.accounts.id.renderButton(
-                document.querySelector(".g_id_signin"),
-                { theme: "outline", size: "large", text: "signin_with" }
-            );
+
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    google.accounts.id.renderButton(
+                        document.getElementById("google-btn-container"),
+                        { theme: "outline", size: "large" }
+                    );
+                    console.log("Prompt ignorado, usando botão alternativo.");
+                }
+            });
         }
     } catch (e) {
-        console.error("Erro ao configurar Google:", e);
+        console.error("Erro na config do Google:", e);
+        Swal.fire("Erro", "Não foi possível conectar ao serviço de login.", "error");
     }
 }
+
 
 function verificarSessao() {
     if (isLocal && !localStorage.getItem("user_email")) {
@@ -56,9 +63,7 @@ function verificarSessao() {
                 </div>`;
         }
         carregarHistorico();
-    } else {
-        configurarGoogleLogin();
-    }
+    } 
 }
 
 const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
