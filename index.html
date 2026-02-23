@@ -130,36 +130,36 @@
 
         <div id="res" class="hidden space-y-4">
             <div class="bg-white p-8 rounded-2xl shadow-lg border-t-8 border-blue-600 relative">
-                <div class="flex justify-between items-start mb-4">
+                <div class="flex justify-between items-start mb-2">
                     <div>
                         <h2 id="loja" class="text-3xl font-black text-gray-900 tracking-tighter leading-tight"></h2>
-                        <p id="info-nota" class="text-blue-500 font-mono text-[10px] font-bold mt-1 uppercase"></p>
+                        <p id="estEndereco" class="text-[10px] text-gray-500 font-medium"></p>
                     </div>
-                    <span
-                        class="bg-blue-50 text-blue-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Cupom
-                        Fiscal</span>
+                    <button onclick="document.getElementById('res').classList.add('hidden')"
+                        class="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter transition-all">
+                        Fechar Detalhes ×
+                    </button>
                 </div>
-                <p id="estEndereco" class="text-gray-400 text-sm flex items-center gap-2 italic">
-                    📍 Localização não disponível
-                </p>
-            </div>
 
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead class="bg-gray-50 text-gray-400">
-                        <tr>
-                            <th class="p-4 font-black uppercase text-[10px] tracking-widest">Itens</th>
-                            <th class="p-4 text-right font-black uppercase text-[10px] tracking-widest">Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="itens" class="divide-y divide-gray-50"></tbody>
-                </table>
-            </div>
+                <div class="mt-4 mb-6 pt-3 border-t border-dashed border-gray-100">
+                    <p id="info-nota" class="text-blue-500 font-mono text-[10px] font-bold uppercase tracking-tight">
+                    </p>
+                    <span class="block text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1">Chave de
+                        Acesso</span>
+                    <p id="chave-acesso" class="text-[10px] text-gray-600 font-mono break-all leading-tight mb-2"></p>
+                </div>
 
-            <div id="statusContainer"
-                class="hidden bg-gray-900 text-white p-6 rounded-2xl shadow-2xl flex justify-between items-center">
-                <span class="text-sm font-bold opacity-50 uppercase tracking-widest">Processamento:</span>
-                <span class="text-green-400 font-black tracking-widest">CONCLUÍDO</span>
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-gray-50 text-gray-400">
+                            <tr>
+                                <th class="p-4 font-black uppercase text-[10px] tracking-widest">Itens</th>
+                                <th class="p-4 text-right font-black uppercase text-[10px] tracking-widest">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itens" class="divide-y divide-gray-50"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
