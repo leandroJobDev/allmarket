@@ -69,7 +69,7 @@
                 Comprou. Escaneou. <span class="text-blue-600">Organizou.</span>
             </p>
 
-            <button onclick="carregarHistorico()"
+            <button id="btn-acessar-notas" onclick="carregarHistorico()"
                 class="text-[10px] font-black text-blue-600 hover:text-white hover:bg-blue-600 uppercase tracking-[0.15em] mx-auto transition-all bg-transparent border-2 border-blue-600 px-8 py-3 rounded-full active:scale-95">
                 📝 Acessar Minhas Notas
             </button>
@@ -107,7 +107,7 @@
                             <span class="animate-pulse">●</span> Sincronizado
                         </p>
                     </div>
-                    <button onclick="document.getElementById('historicoSec').classList.add('hidden')"
+                    <button onclick="fecharHistorico()"
                         class="text-gray-400 hover:text-white hover:bg-red-500 font-black text-[9px] bg-gray-50 px-4 py-2 rounded-full transition-all uppercase tracking-widest border border-gray-100">
                         Fechar ×
                     </button>
