@@ -44,10 +44,7 @@ func (r *NotaFiscalRepository) Salvar(nota entity.NotaFiscal) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// O segredo: Filtra pela CHAVE
 	filter := bson.M{"chave": nota.Chave}
-	
-	// Define que se não existir, ele cria. Se existir, ele substitui TUDO.
 	opts := options.Replace().SetUpsert(true)
 
 	_, err := r.collection.ReplaceOne(ctx, filter, nota, opts)
@@ -69,43 +66,37 @@ func (r *NotaFiscalRepository) BuscarPorChave(chave string) (entity.NotaFiscal, 
 }
 
 func (r *NotaFiscalRepository) ListarPorEmail(email string) ([]entity.NotaFiscal, error) {
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-    // Filtro simplificado e direto
-    filter := bson.M{"usuario_email": strings.ToLower(strings.TrimSpace(email))}
-    
-    // Ordenar por data (opcional, mas bom)
-    opts := options.Find().SetSort(bson.D{{Key: "data_emissao", Value: -1}})
+	filter := bson.M{"usuario_email": strings.ToLower(strings.TrimSpace(email))}
+	opts := options.Find().SetSort(bson.D{{Key: "data_emissao", Value: -1}})
 
-    cursor, err := r.collection.Find(ctx, filter, opts)
-    if err != nil {
-        return nil, err
-    }
-    defer cursor.Close(ctx)
+	cursor, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
 
-    var notas []entity.NotaFiscal
+	var notas []entity.NotaFiscal
 
-    // Em vez de cursor.All, vamos fazer o Decode manual para garantir que funcione na v2
-    for cursor.Next(ctx) {
-        var n entity.NotaFiscal
-        if err := cursor.Decode(&n); err != nil {
-            fmt.Printf("❌ Erro ao decodificar nota: %v\n", err)
-            continue 
-        }
-        notas = append(notas, n)
-    }
+	for cursor.Next(ctx) {
+		var n entity.NotaFiscal
+		if err := cursor.Decode(&n); err != nil {
+			continue
+		}
+		notas = append(notas, n)
+	}
 
-    if err := cursor.Err(); err != nil {
-        return nil, err
-    }
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
 
-    // Se não achou nada, retorna lista vazia em vez de nil (para o JS não bugar)
-    if notas == nil {
-        return []entity.NotaFiscal{}, nil
-    }
+	if notas == nil {
+		return []entity.NotaFiscal{}, nil
+	}
 
-    return notas, nil
+	return notas, nil
 }
 
 func (r *NotaFiscalRepository) BuscarTodas() ([]entity.NotaFiscal, error) {
