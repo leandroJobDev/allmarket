@@ -4,7 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+
     <title>📝 AllM@rket - Comprou. Escaneou. Organizou.</title>
+
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -12,24 +17,32 @@
 
 <body class="bg-gray-100 min-h-screen text-gray-800">
 
-    <div id="login-screen" class="flex items-center justify-center min-h-screen px-6 bg-gray-100">
-        <div class="bg-white border border-gray-100 rounded-3xl p-10 shadow-2xl max-w-sm w-full text-center">
-            <div class="mb-8">
-                <div class="w-24 h-24 flex items-center justify-center mx-auto mb-8">
-                    <img src="/assets/favicon.svg" class="w-full h-full object-contain" alt="AllM@rket Logo">
+    <div id="login-screen" class="flex flex-col items-center justify-center min-h-screen w-full bg-gray-50 px-4">
+
+        <div
+            class="bg-white border border-gray-100 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl w-full max-w-[380px] text-center transition-all">
+
+            <div class="mb-6">
+                <div class="w-20 h-20 flex items-center justify-center mx-auto mb-6">
+                    <img src="assets/favicon.svg" class="w-full h-full object-contain" alt="AllMarket">
                 </div>
 
                 <h3 class="text-2xl font-black text-gray-900 leading-tight mb-8 uppercase tracking-tighter">
-                    Comprou. Escaneou. <span class="text-blue-600">Organizou.</span>
+                    Comprou. Escaneou. <br>
+                    <span class="text-blue-600">Organizou.</span>
                 </h3>
 
                 <div id="google-btn-container" class="flex justify-center min-h-[50px] mb-8"></div>
 
-                <p class="text-gray-500 font-medium px-4 text-sm leading-relaxed">
-                    ✨ Conecte sua conta Google e <span class="text-gray-800 font-bold">assuma o controle</span>
-                    dos seus gastos com dados inteligentes.
+                <p class="text-gray-500 font-medium px-2 text-sm leading-relaxed max-w-[280px] mx-auto">
+                    ✨ Conecte sua conta Google e <br>
+                    <span class="text-gray-800 font-bold">transforme suas notas</span> em economia de verdade.
                 </p>
             </div>
+        </div>
+
+        <div class="mt-8 text-[10px] text-gray-400 font-black tracking-[0.2em]">
+            &copy; 2026 AllM@rket
         </div>
     </div>
 
@@ -38,7 +51,7 @@
             <div id="nav-auth" class="flex items-center gap-2 font-bold text-sm"></div>
 
             <div class="flex items-center gap-2">
-                <div class="font-black text-gray-900 text-xl tracking-tighter">
+                <div class="font-black text-gray-900 text-xl tracking-tighter uppercase">
                     All<span class="text-blue-600">M@rket</span>
                 </div>
                 <img src="assets/favicon.svg" class="h-8 w-8">
@@ -84,7 +97,7 @@
 
         <div id="historicoSec" class="hidden mb-12 animate-in fade-in duration-500">
             <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-                <div class="flex items-center gap-3">
+                <div class="flex items-center justify-between mb-6">
                     <div>
                         <h3 class="text-xl font-black text-gray-900 tracking-tighter uppercase leading-none">
                             Minhas <span class="text-blue-600">Notas</span>
@@ -94,6 +107,10 @@
                             <span class="animate-pulse">●</span> Sincronizado
                         </p>
                     </div>
+                    <button onclick="document.getElementById('historicoSec').classList.add('hidden')"
+                        class="text-gray-400 hover:text-white hover:bg-red-500 font-black text-[9px] bg-gray-50 px-4 py-2 rounded-full transition-all uppercase tracking-widest border border-gray-100">
+                        Fechar ×
+                    </button>
                 </div>
 
                 <input type="text" id="buscaNota" onkeyup="filtrarHistorico()"

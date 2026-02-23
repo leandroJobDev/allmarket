@@ -1,4 +1,11 @@
-const API_URL = "http://127.0.0.1:8080";
+const isLocal = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
+
+const API_URL = isLocal 
+    ? "http://127.0.0.1:8080" 
+    : "https://allmarket-api.onrender.com"; 
+
+const CLIENT_ID = "570724598871-n23jsilb8ncvfv2ve6b848q327fgdav9.apps.googleusercontent.com";
+
 let todasAsNotas = [];
 let notasExibidas = 4;
 
@@ -6,58 +13,63 @@ window.handleCredentialResponse = (response) => {
     const base64Url = response.credential.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const data = JSON.parse(window.atob(base64));
+    
     localStorage.setItem("user_email", data.email);
     localStorage.setItem("user_name", data.name);
+    localStorage.setItem("user_picture", data.picture);
+    
     location.reload();
 };
 
 async function iniciarLoginGoogle() {
-    try {
-        const r = await fetch(`${API_URL}/config`);
-        const config = await r.json();
-        
-        if (config.google_client_id) {
-            google.accounts.id.initialize({
-                client_id: config.google_client_id,
-                callback: window.handleCredentialResponse,
-                ux_mode: 'popup',
-                use_fedcm_for_prompt: false
-            });
-            google.accounts.id.renderButton(
-                document.getElementById("google-btn-container"),
-                { theme: "outline", size: "large", shape: "pill", width: 280 }
-            );
-        } else {
-            console.error("Client ID não encontrado no backend.");
-        }
-    } catch (e) { 
-        console.error("Erro ao conectar com o backend para login:", e); 
-    }
+    google.accounts.id.initialize({
+        client_id: CLIENT_ID.trim(),
+        callback: window.handleCredentialResponse,
+        ux_mode: 'popup',
+        use_fedcm_for_prompt: false
+    });
+
+    google.accounts.id.renderButton(
+        document.getElementById("google-btn-container"),
+        { theme: "outline", size: "large", shape: "pill", width: 280, locale: "pt_BR" }
+    );
 }
 
 function verificarSessao() {
     const email = localStorage.getItem("user_email");
+    const name = localStorage.getItem("user_name");
+    const pic = localStorage.getItem("user_picture");
+    
     const loginScreen = document.getElementById("login-screen");
     const appContent = document.getElementById("app-content");
     const mainNav = document.getElementById("main-nav");
     const navAuth = document.getElementById("nav-auth");
 
     if (email) {
-        if (loginScreen) loginScreen.classList.add("hidden");
-        if (appContent) appContent.classList.remove("hidden");
-        if (mainNav) mainNav.classList.remove("hidden");
+        loginScreen?.classList.add("hidden");
+        appContent?.classList.remove("hidden");
+        mainNav?.classList.remove("hidden");
+        
         if (navAuth) {
             navAuth.innerHTML = `
-                <div class="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                    <span class="text-blue-700 text-xs font-bold">${email}</span>
-                    <button onclick="sair()" class="text-[10px] text-red-500 font-black uppercase ml-2 hover:text-red-700">Sair</button>
+                <div class="flex items-center gap-3 bg-white p-1 pr-4 rounded-full border border-gray-100 shadow-sm">
+                    <img src="${pic}" class="w-8 h-8 rounded-full border-2 border-blue-50" onerror="this.src='assets/favicon.svg'">
+                    <div class="flex flex-col">
+                        <span class="text-[9px] text-gray-400 font-black uppercase tracking-tighter leading-none">Usuário</span>
+                        <span class="text-xs font-black text-gray-900 leading-tight">${name.split(' ')[0]}</span>
+                    </div>
+                    <button onclick="sair()" class="ml-2 text-gray-300 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                        </svg>
+                    </button>
                 </div>`;
         }
         carregarHistorico();
     } else {
-        if (loginScreen) loginScreen.classList.remove("hidden");
-        if (appContent) appContent.classList.add("hidden");
-        if (mainNav) mainNav.classList.add("hidden");
+        loginScreen?.classList.remove("hidden");
+        appContent?.classList.add("hidden");
+        mainNav?.classList.add("hidden");
         iniciarLoginGoogle();
     }
 }
