@@ -76,7 +76,7 @@
         </header>
 
         <div class="bg-white p-6 rounded-2xl shadow-xl mb-8 border border-gray-100">
-            <label class="block text-[10px] font-black text-gray-400 mb-3 uppercase tracking-[0.2em]">URL do QR Code da
+            <label class="block text-[10px] font-black text-gray-400 mb-3 uppercase tracking-[0.2em]">Link do QR Code da
                 Nota</label>
             <div class="flex flex-col md:flex-row gap-3">
                 <input type="text" id="urlNota" placeholder="Cole aqui o link da sua nota fiscal..."
@@ -130,36 +130,47 @@
 
         <div id="res" class="hidden space-y-4">
             <div class="bg-white p-8 rounded-2xl shadow-lg border-t-8 border-blue-600 relative">
-                <div class="flex justify-between items-start mb-4">
+                <div class="flex justify-between items-start mb-2">
                     <div>
                         <h2 id="loja" class="text-3xl font-black text-gray-900 tracking-tighter leading-tight"></h2>
-                        <p id="info-nota" class="text-blue-500 font-mono text-[10px] font-bold mt-1 uppercase"></p>
+                        <p id="estEndereco" class="text-[10px] text-gray-500 font-medium"></p>
                     </div>
-                    <span
-                        class="bg-blue-50 text-blue-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">Cupom
-                        Fiscal</span>
+                    <button onclick="document.getElementById('res').classList.add('hidden')"
+                        class="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter transition-all">
+                        Fechar Detalhes ×
+                    </button>
                 </div>
-                <p id="estEndereco" class="text-gray-400 text-sm flex items-center gap-2 italic">
-                    📍 Localização não disponível
-                </p>
-            </div>
 
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead class="bg-gray-50 text-gray-400">
-                        <tr>
-                            <th class="p-4 font-black uppercase text-[10px] tracking-widest">Itens</th>
-                            <th class="p-4 text-right font-black uppercase text-[10px] tracking-widest">Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="itens" class="divide-y divide-gray-50"></tbody>
-                </table>
-            </div>
+                <div class="mt-4 mb-6 pt-3 border-t border-dashed border-gray-100">
+                    <p id="info-nota" class="text-blue-500 font-mono text-[10px] font-bold uppercase tracking-tight">
+                    </p>
+                    <span class="block text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1">Chave de
+                        Acesso</span>
+                    <p id="chave-acesso" class="text-[10px] text-gray-600 font-mono break-all leading-tight mb-2"></p>
+                </div>
 
-            <div id="statusContainer"
-                class="hidden bg-gray-900 text-white p-6 rounded-2xl shadow-2xl flex justify-between items-center">
-                <span class="text-sm font-bold opacity-50 uppercase tracking-widest">Processamento:</span>
-                <span class="text-green-400 font-black tracking-widest">CONCLUÍDO</span>
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-gray-50 text-gray-400">
+                            <tr>
+                                <th class="p-4 font-black uppercase text-[10px] tracking-widest">Itens</th>
+                                <th class="p-4 text-right font-black uppercase text-[10px] tracking-widest">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itens" class="divide-y divide-gray-50"></tbody>
+                    </table>
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-100 flex justify-center">
+                    <button id="btnRemoverNota"
+                        class="flex items-center gap-2 text-red-400 hover:text-red-600 font-black text-[10px] uppercase tracking-widest transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-2.25a2.25 2.25 0 0 0-2.25-2.25h-4.5a2.25 2.25 0 0 0-2.25 2.25v2.25" />
+                        </svg>
+                        Remover nota
+                    </button>
+                </div>
             </div>
         </div>
     </div>

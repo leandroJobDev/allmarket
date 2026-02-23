@@ -116,3 +116,9 @@ func (r *NotaFiscalRepository) BuscarTodas() ([]entity.NotaFiscal, error) {
 
 	return notas, nil
 }
+func (r *NotaFiscalRepository) DeletarPorChaveEEmail(chave string, email string) error {
+    ctx := context.TODO()
+    filter := bson.M{"chave": chave, "usuario_email": email}
+    _, err := r.collection.DeleteOne(ctx, filter)
+    return err
+}
