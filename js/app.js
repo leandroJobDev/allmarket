@@ -65,29 +65,43 @@ async function enviarNota() {
     const url = document.getElementById("urlNota").value;
     const email = localStorage.getItem("user_email");
     const btn = document.getElementById("btnProcessar");
+
     if (!url) return Swal.fire("Atenção", "Insira a URL da nota.", "warning");
+
     btn.disabled = true;
     btn.innerText = "PROCESSANDO...";
+
     try {
         const r = await fetch(`${API_URL}/processar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url, email })
         });
+
         const data = await r.json();
+
         if (r.ok || r.status === 409) {
             const nota = data.nota || data;
+            
             renderizarNota(nota);
-            Swal.fire(r.status === 409 ? "Nota já cadastrada" : "Sucesso!", r.status === 409 ? "Mostrando dados salvos.." : "Nota importada com sucesso.", r.status === 409 ? "info" : "success");
-            if (!todasAsNotas.some(n => n.chave === nota.chave)) {
+
+            if (r.status !== 409 && !todasAsNotas.some(n => n.chave === nota.chave)) {
                 todasAsNotas.unshift(nota);
                 renderizarListaPaginada();
+                Swal.fire("Sucesso!", "Nota importada com sucesso.", "success");
             }
+            
+            document.getElementById("urlNota").value = "";
         } else {
             Swal.fire("Erro", data.error || "Erro ao processar", "error");
         }
-    } catch (e) { Swal.fire("Erro", "Servidor offline."); }
-    finally { btn.disabled = false; btn.innerHTML = `CONSULTAR`; }
+    } catch (e) {
+        console.error(e);
+        Swal.fire("Erro", "Servidor offline.");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `CONSULTAR`;
+    }
 }
 
 async function carregarHistorico() {
@@ -119,7 +133,7 @@ function renderizarListaPaginada() {
 
     secaoHist?.classList.remove("hidden");
     btnAcessar && btnAcessar.classList.toggle("hidden", todasAsNotas.length > 0);
-    
+
     if (contador) contador.innerText = `${todasAsNotas.length} ${todasAsNotas.length === 1 ? 'compra salva' : 'compras salvas'}`;
 
     const notasParaExibir = todasAsNotas.slice(0, notasExibidas);
@@ -145,13 +159,13 @@ function renderizarListaPaginada() {
 function renderizarNota(nota) {
     const resDiv = document.getElementById("res");
     if (!resDiv || !nota) return;
-    
+
     resDiv.classList.remove("hidden");
-    
+
     document.getElementById("loja").innerText = nota.estabelecimento.nome;
     document.getElementById("estEndereco").innerText = nota.estabelecimento.endereco;
     document.getElementById("info-nota").innerText = `Nº ${nota.numero} | EMISSÃO: ${nota.data_emissao}`;
-    
+
     const chaveElemento = document.getElementById("chave-acesso");
     if (chaveElemento) {
         chaveElemento.innerText = nota.chave.replace(/(.{4})/g, '$1 '); // Adiciona espaços para facilitar leitura
@@ -166,8 +180,13 @@ function renderizarNota(nota) {
             </td>
             <td class="p-4 text-right font-black text-blue-600">${formatarMoeda(i.preco_total || i.valor_total)}</td>
         </tr>`).join('');
-    
+
     setTimeout(() => resDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+
+    const btnRemover = document.getElementById("btnRemoverNota");
+    if (btnRemover) {
+        btnRemover.onclick = () => confirmarRemocao(nota.chave);
+    }
 }
 
 function exibirDetalhesDoObjeto(index) {
@@ -192,14 +211,52 @@ function filtrarHistorico() {
 function fecharHistorico() {
     document.getElementById('historicoSec')?.classList.add('hidden');
     document.getElementById('res')?.classList.add('hidden');
-    
+
     const btnAcessar = document.getElementById('btn-acessar-notas');
     if (btnAcessar) btnAcessar.classList.remove('hidden');
-    
+
     notasExibidas = 4;
 }
 
 const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 function mostrarMaisNotas() { notasExibidas += 4; renderizarListaPaginada(); }
 function sair() { localStorage.clear(); location.reload(); }
+
+async function confirmarRemocao(chave) {
+    const { isConfirmed } = await Swal.fire({
+        title: 'Remover nota?',
+        text: "Esta ação não pode ser desfeita!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sim, remover',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (isConfirmed) {
+        removerNota(chave);
+    }
+}
+
+async function removerNota(chave) {
+    const email = localStorage.getItem("user_email");
+    try {
+        const r = await fetch(`${API_URL}/historico/${chave}?email=${email}`, {
+            method: "DELETE"
+        });
+
+        if (r.ok) {
+            Swal.fire("Removida!", "A nota foi excluída com sucesso.", "success");
+            document.getElementById('res').classList.add('hidden');
+            todasAsNotas = todasAsNotas.filter(n => n.chave !== chave);
+            renderizarListaPaginada();
+        } else {
+            Swal.fire("Erro", "Não foi possível remover a nota.", "error");
+        }
+    } catch (e) {
+        console.error(e);
+        Swal.fire("Erro", "Erro ao conectar com o servidor.", "error");
+    }
+}
 window.onload = verificarSessao;
