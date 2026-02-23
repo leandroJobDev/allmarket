@@ -54,19 +54,16 @@ func obterDocumento(input string) (*goquery.Document, error) {
 }
 
 func extrairChave(doc *goquery.Document, texto string) string {
-	// 1. Tenta buscar pela classe específica que você mandou
 	chave := doc.Find(".chave").Text()
 	if chave == "" {
 		chave = doc.Find("#chave, .txtChave").Text()
 	}
 
-	// 2. Se falhar nas tags, usa Regex no texto
 	if chave == "" {
 		re := regexp.MustCompile(`(\d\s*){44}`)
 		chave = re.FindString(texto)
 	}
 
-	// Limpa tudo que não for número
 	return strings.Map(func(r rune) rune {
 		if r >= '0' && r <= '9' {
 			return r
@@ -100,7 +97,6 @@ func extrairEndereco(doc *goquery.Document) string {
 	}
 
 	var partes []string
-	// Tenta pegar o endereço no padrão HTML
 	doc.Find(".text, .txtEndereco").Each(func(_ int, s *goquery.Selection) {
 		t := strings.TrimSpace(s.Text())
 		if t != "" && !strings.Contains(t, "CNPJ") && (strings.Contains(t, ",") || strings.Contains(t, "SP")) {
@@ -181,7 +177,6 @@ func extrairNumero(texto string) float64 {
 		return -1
 	}, texto)
 
-	// Se tiver vírgula, trata como decimal brasileiro
 	if strings.Contains(limpo, ",") {
 		limpo = strings.ReplaceAll(limpo, ".", "") 
 		limpo = strings.Replace(limpo, ",", ".", 1)

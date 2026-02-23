@@ -1,21 +1,18 @@
-// Configurações Globais
 const API_URL = "http://127.0.0.1:8080";
 let todasAsNotas = [];
 let notasExibidas = 4;
 
-// 1. Funções de Autenticação e Google
 window.handleCredentialResponse = (response) => {
     const base64Url = response.credential.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const data = JSON.parse(window.atob(base64));
     localStorage.setItem("user_email", data.email);
     localStorage.setItem("user_name", data.name);
-    location.reload(); // Recarrega para entrar na área logada
+    location.reload();
 };
 
 async function iniciarLoginGoogle() {
     try {
-        console.log("Buscando configurações do servidor...");
         const r = await fetch(`${API_URL}/config`);
         const config = await r.json();
         
@@ -46,7 +43,6 @@ function verificarSessao() {
     const navAuth = document.getElementById("nav-auth");
 
     if (email) {
-        // Usuário Logado
         if (loginScreen) loginScreen.classList.add("hidden");
         if (appContent) appContent.classList.remove("hidden");
         if (mainNav) mainNav.classList.remove("hidden");
@@ -59,15 +55,13 @@ function verificarSessao() {
         }
         carregarHistorico();
     } else {
-        // Usuário Deslogado
         if (loginScreen) loginScreen.classList.remove("hidden");
         if (appContent) appContent.classList.add("hidden");
         if (mainNav) mainNav.classList.add("hidden");
-        iniciarLoginGoogle(); // CHAMA A FUNÇÃO CORRETA AQUI
+        iniciarLoginGoogle();
     }
 }
 
-// 2. Processamento de Notas
 async function enviarNota() {
     const url = document.getElementById("urlNota").value;
     const email = localStorage.getItem("user_email");
@@ -97,7 +91,6 @@ async function enviarNota() {
                 Swal.fire("Sucesso!", "Nota importada com sucesso.", "success");
             }
 
-            // Atualiza lista local para aparecer na hora no histórico
             if (!todasAsNotas.some(n => n.chave === nota.chave)) {
                 todasAsNotas.unshift(nota);
                 renderizarListaPaginada();
@@ -114,7 +107,6 @@ async function enviarNota() {
     }
 }
 
-// 3. Renderização e Histórico
 function renderizarNota(nota) {
     const resDiv = document.getElementById("res");
     resDiv.classList.remove("hidden");
@@ -123,7 +115,6 @@ function renderizarNota(nota) {
     document.getElementById("estEndereco").innerText = nota.estabelecimento.endereco;
     document.getElementById("info-nota").innerText = `Nº ${nota.numero} | EMISSÃO: ${nota.data_emissao}`;
     
-    // Atualiza todas as tags <code> com a chave
     const codes = document.getElementsByTagName("code");
     for (let i = 0; i < codes.length; i++) { codes[i].innerText = nota.chave; }
 
@@ -193,7 +184,6 @@ function renderizarListaPaginada() {
     containerVerMais.classList.toggle("hidden", todasAsNotas.length <= notasExibidas);
 }
 
-// 4. Utilitários
 const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 function exibirDetalhesDoObjeto(index) {
@@ -210,7 +200,6 @@ function filtrarHistorico() {
     const filtradas = todasAsNotas.filter(nota =>
         nota.estabelecimento.nome.toLowerCase().includes(termo)
     );
-    // Para simplificar, o filtro mostra todos os resultados da busca
     const listaHist = document.getElementById('lista-hist');
     listaHist.innerHTML = filtradas.map((nota) => `
         <div onclick="renderizarNota(${JSON.stringify(nota).replace(/"/g, '&quot;')})" 
@@ -230,5 +219,6 @@ function sair() {
     location.reload();
 }
 
-// Inicialização
-verificarSessao();
+window.onload = () => {
+    verificarSessao();
+};
