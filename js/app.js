@@ -94,7 +94,7 @@ async function enviarNota() {
         Swal.fire("Erro", "Servidor offline.");
     } finally {
         btn.disabled = false;
-        btn.innerHTML = `CONSULTAR`;
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>`;
     }
 }
 
@@ -119,6 +119,44 @@ async function carregarHistorico() {
     } catch (e) {
         console.error(e);
         renderizarListaPaginada();
+    }
+}
+
+function filtrarHistorico() {
+    const termo = document.getElementById("buscaNota").value.toLowerCase();
+    const listaHist = document.getElementById('lista-hist');
+    const template = document.getElementById('template-nota');
+    const contador = document.getElementById('contador-notas');
+
+    const notasFiltradas = todasAsNotas.filter(nota =>
+        nota.estabelecimento.nome.toLowerCase().includes(termo)
+    );
+
+    listaHist.innerHTML = '';
+
+    if (notasFiltradas.length === 0) {
+        listaHist.innerHTML = '<p class="text-center text-gray-400 py-10 col-span-full font-bold uppercase text-xs tracking-widest">Nenhuma nota encontrada</p>';
+        if (contador) contador.innerText = "Nenhum resultado";
+        return;
+    }
+
+    notasFiltradas.slice(0, notasExibidas).forEach((nota) => {
+        const clone = template.content.cloneNode(true);
+
+        clone.querySelector('.nota-nome').innerText = nota.estabelecimento.nome;
+        clone.querySelector('.nota-data').innerText = nota.data_emissao;
+        clone.querySelector('.nota-valor').innerText = formatarMoeda(nota.valor_total);
+        clone.querySelector('.nota-itens').innerText = `${nota.itens.length} itens`;
+
+        const indexOriginal = todasAsNotas.findIndex(n => n.chave === nota.chave);
+        const cardDiv = clone.querySelector('div');
+        cardDiv.onclick = () => exibirDetalhesDoObjeto(indexOriginal);
+
+        listaHist.appendChild(clone);
+    });
+
+    if (contador) {
+        contador.innerText = `${notasFiltradas.length} resultado(s) encontrado(s)`;
     }
 }
 
