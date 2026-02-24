@@ -1,95 +1,71 @@
-# 🛒 AllMarket - Ecossistema de Gestão de Notas Fiscais
+# AllM@rket 🛒
+> **Extrair. Escanear. Economizar.**
 
-O **AllMarket** é uma plataforma completa para gestão, validação e organização de compras. Utilizando uma API robusta em **Go (Golang)** com **Clean Architecture**, o sistema transforma URLs de QR Codes da SEFAZ em inteligência de consumo, com persistência em nuvem e uma interface moderna focada no usuário final.
+O AllM@rket é uma solução inteligente para gestão de consumo pessoal. Ele automatiza a extração de dados de notas fiscais via QR Code, transformando cupons fiscais complexos em um histórico de compras limpo, detalhado e útil.
 
----
+![AllMarket Demo](./assets/demo.gif) ## ✨ O Conceito 3E
+O AllM@rket foi construído sobre três pilares fundamentais que guiam a experiência do usuário:
 
-## 📺 Status do Projeto
-**Versão 2.0 - Produção 🚀** O sistema está operando com **Google Auth**, frontend reativo em **Tailwind CSS** e backend integrado ao **MongoDB Atlas**.
-
----
-
-## 🛠️ Tecnologias e Ferramentas
-
-### Backend (Cérebro)
-* **Linguagem:** Go (Golang) v1.22+
-* **Framework Web:** Gin Gonic
-* **Persistência:** MongoDB Atlas (NoSQL)
-* **Scraping:** GoQuery para parsing de dados fiscais (SEFAZ)
-
-### Frontend (Interface)
-* **Framework CSS:** Tailwind CSS (Design moderno e responsivo)
-* **Autenticação:** Google Identity Services
-* **Componentes:** SweetAlert2 para feedbacks visuais premium
+* **Extrair:** Esqueça a digitação manual. Cole o link da nota e nossa API faz o trabalho pesado.
+* **Escanear:** Inteligência que organiza cada item, preço unitário e estabelecimento automaticamente.
+* **Economizar:** Histórico na palma da mão para você tomar decisões de compra mais inteligentes.
 
 ---
 
-## 🏗️ Arquitetura e Organização
+## 🚀 Tecnologias
+Este projeto utiliza uma stack moderna focada em performance e escalabilidade:
 
-O projeto segue os princípios de **Clean Architecture**, garantindo que a lógica de negócio seja independente de frameworks e bancos de dados:
-
-* `cmd/api/`: Configuração do servidor e injeção de dependências.
-* `internal/entity/`: Regras de negócio puras (Modelos de Nota, Itens e Estabelecimento).
-* `internal/usecase/`: Orquestração do processamento e motores de scraping.
-* `internal/infrastructure/`: Adaptadores para MongoDB e middlewares de segurança.
-
----
-
-## 🚀 Funcionalidades de Destaque (UX/UI)
-
-* **Minha Carteira (Sincronizada):** O usuário loga com sua conta Google e tem acesso instantâneo ao seu histórico de compras.
-* **Paginação Inteligente:** Renderização otimizada de compras para manter a performance e fluidez.
-* **Filtro de Busca Dinâmico:** Localização instantânea de estabelecimentos ou valores dentro do histórico.
-* **Mobile First:** Interface totalmente adaptada para smartphones com o conceito: **Extrair. Escanear. Economizar.**
-* **Ancoragem Inteligente:** Scroll suave diretamente para os detalhes do cupom selecionado.
-* **Prevenção de Conflitos:** Identificação automática de notas já processadas (Idempotência).
+* **Backend:** [Go](https://golang.org/) (Golang) - Alta performance e concorrência para processamento de dados.
+* **Frontend:** HTML5, CSS3 (Tailwind CSS) & JavaScript Vanilla - Interface leve, responsiva e focada no mobile.
+* **Auth:** Google Identity Services - Login seguro e simplificado.
+* **API:** Arquitetura RESTful com deploy no Render.
 
 ---
 
-## 📂 Estrutura de Rotas API
+## 🛠️ Como Funciona? (Simples. Rápido. Automático.)
 
-| Método | Rota | Descrição |
-| :--- | :--- | :--- |
-| `GET` | `/` | Health Check / Status da API |
-| `POST` | `/processar` | Extrai e salva dados de uma nova URL de nota |
-| `GET` | `/historico` | Recupera todas as notas vinculadas a um e-mail |
+1.  **Login:** Acesse com sua conta Google.
+2.  **Input:** Cole a URL do QR Code da sua Nota Fiscal Gaúcha (ou equivalente).
+3.  **Processamento:** Nossa API em Go faz o *parsing* do HTML da SEFAZ em milissegundos.
+4.  **Resultado:** Os itens são salvos na sua conta e exibidos em cards detalhados.
 
 ---
 
-## 🧪 Como Rodar o Projeto
+## 📱 Mobile First
+O AllM@rket foi desenhado para ser um **PWA (Progressive Web App)**. A interface se adapta perfeitamente ao seu celular, garantindo que você possa registrar suas compras ainda no estacionamento do mercado.
 
-### 1. Configuração do Ambiente
-Crie um arquivo `.env` na raiz do projeto:
-```env
-MONGO_USER=seu_usuario
-MONGO_PASS=sua_senha
-PORT=8080
+---
 
-```
-
-### 2. Execução
+## 🔧 Instalação & Uso Local
 
 ```bash
-# Rodar o backend
-go run cmd/api/main.go
+# Clone o repositório
+git clone [https://github.com/seu-usuario/allmarket.git](https://github.com/seu-usuario/allmarket.git)
+
+# Entre na pasta do backend e execute
+go run main.go
+
+# Abra o index.html no seu navegador (utilize o Live Server para melhor experiência)
 
 ```
 
-*O frontend pode ser aberto diretamente via Live Server ou qualquer servidor estático.*
+---
+
+## 📝 Roadmap de Evolução
+
+* [ ] Comparativo de preços entre estabelecimentos.
+* [ ] Gráficos de categorias de consumo (Alimentação, Limpeza, etc.).
+* [ ] Lista de compras automática baseada no histórico.
+* [ ] Suporte a notas fiscais de outros estados.
 
 ---
 
-## 📈 Roadmap de Evolução
+## 🤝 Contribuições
 
-* **Analytics & BI:** Implementação de dashboards interativos com gráficos de gastos e comparadores de preços históricos.
-* **Smart Shopping List:** Geração automatizada de listas de compras baseada nos produtos já cadastrados no banco.
-* **IA Engine:** Integração com inteligência artificial para analisar preços em sites de varejo e encartes digitais.
-* **Exportação Pro:** Geração de relatórios consolidados em PDF e planilhas (Excel/CSV).
+Contribuições são o que fazem a comunidade open source um lugar incrível. Sinta-se à vontade para abrir uma **Issue** ou enviar um **Pull Request**.
 
 ---
 
-Desenvolvido com foco em **Excelência Arquitetural** e **Design Resiliente**.
-
-```
+Desenhado por Leandro
 
 ```
