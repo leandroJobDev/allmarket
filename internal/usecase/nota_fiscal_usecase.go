@@ -9,7 +9,6 @@ import (
 func ProcessarURL(input string) (entity.NotaFiscal, error) {
 	input = strings.TrimSpace(input)
 
-	// Validação estrita: Agora só aceitamos links
 	if !strings.HasPrefix(input, "http") {
 		return entity.NotaFiscal{}, fmt.Errorf("por favor, insira um link válido da nota fiscal (URL)")
 	}
@@ -19,7 +18,7 @@ func ProcessarURL(input string) (entity.NotaFiscal, error) {
 	case strings.Contains(input, "sef.sc.gov.br"),   // Santa Catarina
 		 strings.Contains(input, "sefaz.pe.gov.br"),   // Pernambuco
 		 strings.Contains(input, "sefaz.pb.gov.br"),   // Paraíba
-		 strings.Contains(input, "fazenda.sp.gov.br"): // São Paulo (exemplo)
+		 strings.Contains(input, "fazenda.sp.gov.br"): // São Paulo 
 		return ScraperPadraoNacional(input)
 
 	default:
