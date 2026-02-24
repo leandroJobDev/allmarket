@@ -64,8 +64,4 @@ go run main.go
 
 Contribuições são o que fazem a comunidade open source um lugar incrível. Sinta-se à vontade para abrir uma **Issue** ou enviar um **Pull Request**.
 
----
 
-Desenhado por Leandro
-
-```
