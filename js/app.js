@@ -3,7 +3,7 @@ const API_URL = isLocal ? "http://127.0.0.1:8080" : "https://allmarket-api.onren
 const CLIENT_ID = "570724598871-n23jsilb8ncvfv2ve6b848q327fgdav9.apps.googleusercontent.com";
 
 let todasAsNotas = [];
-let notasExibidas = 4;
+let notasExibidas = 8;
 
 window.handleCredentialResponse = (response) => {
     const data = JSON.parse(window.atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
@@ -30,33 +30,30 @@ function verificarSessao() {
     const email = localStorage.getItem("user_email");
     const name = localStorage.getItem("user_name");
     const pic = localStorage.getItem("user_picture");
+
     const loginScreen = document.getElementById("login-screen");
     const appContent = document.getElementById("app-content");
     const mainNav = document.getElementById("main-nav");
-    const navAuth = document.getElementById("nav-auth");
+    const userProfile = document.getElementById("user-profile");
 
     if (email) {
         loginScreen?.classList.add("hidden");
         appContent?.classList.remove("hidden");
         mainNav?.classList.remove("hidden");
-        if (navAuth) {
-            navAuth.innerHTML = `
-                <div class="flex items-center gap-3 bg-white p-1 pr-4 rounded-full border border-gray-100 shadow-sm">
-                    <img src="${pic}" class="w-8 h-8 rounded-full border-2 border-blue-50" onerror="this.src='assets/favicon.svg'">
-                    <div class="flex flex-col">
-                        <span class="text-[9px] text-gray-400 font-black uppercase leading-none">Usuário</span>
-                        <span class="text-xs font-black text-gray-900 leading-tight">${name.split(' ')[0]}</span>
-                    </div>
-                    <button onclick="sair()" class="ml-2 text-gray-300 hover:text-red-500 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
-                    </button>
-                </div>`;
+
+        if (userProfile) {
+            userProfile.classList.remove("hidden");
+            document.getElementById("user-pic").src = pic;
+            document.getElementById("user-name-display").innerText = name.split(' ')[0];
         }
+
         carregarHistorico();
     } else {
         loginScreen?.classList.remove("hidden");
         appContent?.classList.add("hidden");
         mainNav?.classList.add("hidden");
+        userProfile?.classList.add("hidden");
+
         iniciarLoginGoogle();
     }
 }
@@ -82,15 +79,12 @@ async function enviarNota() {
 
         if (r.ok || r.status === 409) {
             const nota = data.nota || data;
-            
             renderizarNota(nota);
-
             if (r.status !== 409 && !todasAsNotas.some(n => n.chave === nota.chave)) {
                 todasAsNotas.unshift(nota);
                 renderizarListaPaginada();
                 Swal.fire("Sucesso!", "Nota importada com sucesso.", "success");
             }
-            
             document.getElementById("urlNota").value = "";
         } else {
             Swal.fire("Erro", data.error || "Erro ao processar", "error");
@@ -113,6 +107,7 @@ async function carregarHistorico() {
         if (Array.isArray(notas)) {
             todasAsNotas = notas.sort((a, b) => {
                 const parse = (s) => {
+                    if (!s) return 0;
                     const [d, h] = s.split(' ');
                     const [dia, mes, ano] = d.split('/');
                     return new Date(`${ano}-${mes}-${dia}T${h || '00:00:00'}`).getTime();
@@ -121,44 +116,64 @@ async function carregarHistorico() {
             });
         }
         renderizarListaPaginada();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error(e);
+        renderizarListaPaginada();
+    }
 }
 
 function renderizarListaPaginada() {
+    const welcomeCard = document.getElementById('welcome-card');
     const listaHist = document.getElementById('lista-hist');
     const containerVerMais = document.getElementById('container-ver-mais');
     const secaoHist = document.getElementById('historicoSec');
     const contador = document.getElementById('contador-notas');
-    const btnAcessar = document.getElementById('btn-acessar-notas');
+    const template = document.getElementById('template-nota');
 
-    secaoHist?.classList.remove("hidden");
-    btnAcessar && btnAcessar.classList.toggle("hidden", todasAsNotas.length > 0);
+    listaHist.innerHTML = '';
 
-    if (contador) contador.innerText = `${todasAsNotas.length} ${todasAsNotas.length === 1 ? 'compra salva' : 'compras salvas'}`;
-
-    const notasParaExibir = todasAsNotas.slice(0, notasExibidas);
-    if (notasParaExibir.length === 0) {
-        listaHist.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 italic">Sua carteira está vazia.</div>`;
+    if (todasAsNotas.length === 0) {
+        welcomeCard?.classList.remove('hidden');
+        secaoHist?.classList.add('hidden');
+        if (contador) contador.innerText = "Nenhuma compra salva";
+        if (containerVerMais) containerVerMais.classList.add("hidden");
         return;
     }
 
-    listaHist.innerHTML = notasParaExibir.map((nota, index) => `
-        <div onclick="exibirDetalhesDoObjeto(${index})" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm active:scale-95 transition-all cursor-pointer flex justify-between items-center group">
-            <div class="flex-1 truncate">
-                <h4 class="font-black text-gray-800 text-sm truncate uppercase group-hover:text-blue-600">${nota.estabelecimento.nome}</h4>
-                <p class="text-[10px] text-gray-400 font-bold">${nota.data_emissao}</p>
-            </div>
-            <div class="text-right ml-4">
-                <span class="block text-blue-600 font-black text-base">${formatarMoeda(nota.valor_total)}</span>
-                <span class="text-[8px] text-gray-400 uppercase font-bold">${nota.itens.length} itens</span>
-            </div>
-        </div>`).join('');
-    containerVerMais && containerVerMais.classList.toggle("hidden", todasAsNotas.length <= notasExibidas);
+    welcomeCard?.classList.add('hidden');
+    secaoHist?.classList.remove('hidden');
+
+    if (contador) {
+        contador.innerHTML = `<span class="animate-pulse">●</span> ${todasAsNotas.length} ${todasAsNotas.length === 1 ? 'compra salva' : 'compras salvas'}`;
+    }
+
+    const notasParaExibir = todasAsNotas.slice(0, notasExibidas);
+
+    notasParaExibir.forEach((nota, index) => {
+        const clone = template.content.cloneNode(true);
+
+        clone.querySelector('.nota-nome').innerText = nota.estabelecimento.nome;
+        clone.querySelector('.nota-data').innerText = nota.data_emissao;
+        clone.querySelector('.nota-valor').innerText = formatarMoeda(nota.valor_total);
+        clone.querySelector('.nota-itens').innerText = `${nota.itens.length} itens`;
+
+        const cardDiv = clone.querySelector('div');
+        cardDiv.onclick = () => exibirDetalhesDoObjeto(index);
+
+        listaHist.appendChild(clone);
+    });
+
+    if (containerVerMais) {
+        containerVerMais.classList.toggle("hidden", todasAsNotas.length <= notasExibidas);
+    }
 }
 
 function renderizarNota(nota) {
     const resDiv = document.getElementById("res");
-    if (!resDiv || !nota) return;
+    const templateItem = document.getElementById("template-item-nota");
+    const tbody = document.getElementById("itens");
+
+    if (!resDiv || !nota || !templateItem) return;
 
     resDiv.classList.remove("hidden");
 
@@ -168,18 +183,19 @@ function renderizarNota(nota) {
 
     const chaveElemento = document.getElementById("chave-acesso");
     if (chaveElemento) {
-        chaveElemento.innerText = nota.chave.replace(/(.{4})/g, '$1 '); // Adiciona espaços para facilitar leitura
+        chaveElemento.innerText = nota.chave.replace(/(.{4})/g, '$1 ');
     }
 
-    const tbody = document.getElementById("itens");
-    tbody.innerHTML = nota.itens.map(i => `
-        <tr class="hover:bg-gray-50 border-b border-gray-50">
-            <td class="p-4 text-sm uppercase">
-                <span class="block font-black text-gray-800">${i.nome}</span>
-                <span class="text-[10px] text-gray-400 font-bold">QTD: ${i.quantidade} | UNIT: ${formatarMoeda(i.preco_unitario)}</span>
-            </td>
-            <td class="p-4 text-right font-black text-blue-600">${formatarMoeda(i.preco_total || i.valor_total)}</td>
-        </tr>`).join('');
+    tbody.innerHTML = "";
+    nota.itens.forEach(i => {
+        const clone = templateItem.content.cloneNode(true);
+
+        clone.querySelector('.item-nome').innerText = i.nome;
+        clone.querySelector('.item-detalhes').innerText = `QTD: ${i.quantidade} | UNIT: ${formatarMoeda(i.preco_unitario)}`;
+        clone.querySelector('.item-valor').innerText = formatarMoeda(i.preco_total || i.valor_total);
+
+        tbody.appendChild(clone);
+    });
 
     setTimeout(() => resDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 
@@ -191,31 +207,6 @@ function renderizarNota(nota) {
 
 function exibirDetalhesDoObjeto(index) {
     if (todasAsNotas[index]) renderizarNota(todasAsNotas[index]);
-}
-
-function filtrarHistorico() {
-    const termo = document.getElementById("buscaNota").value.toLowerCase();
-    const filtradas = todasAsNotas.filter(n => n.estabelecimento.nome.toLowerCase().includes(termo));
-    document.getElementById('lista-hist').innerHTML = filtradas.map((nota) => `
-        <div onclick="renderizarNota(${JSON.stringify(nota).replace(/"/g, '&quot;')})" class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm active:bg-blue-50 transition-all cursor-pointer flex justify-between items-center">
-            <div class="flex-1 truncate uppercase">
-                <h4 class="font-black text-gray-800 text-sm truncate">${nota.estabelecimento.nome}</h4>
-                <p class="text-[10px] text-gray-400 font-bold">${nota.data_emissao}</p>
-            </div>
-            <div class="text-right ml-4">
-                <span class="block text-blue-600 font-black text-base">${formatarMoeda(nota.valor_total)}</span>
-            </div>
-        </div>`).join('');
-}
-
-function fecharHistorico() {
-    document.getElementById('historicoSec')?.classList.add('hidden');
-    document.getElementById('res')?.classList.add('hidden');
-
-    const btnAcessar = document.getElementById('btn-acessar-notas');
-    if (btnAcessar) btnAcessar.classList.remove('hidden');
-
-    notasExibidas = 4;
 }
 
 const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -233,30 +224,20 @@ async function confirmarRemocao(chave) {
         confirmButtonText: 'Sim, remover',
         cancelButtonText: 'Cancelar'
     });
-
-    if (isConfirmed) {
-        removerNota(chave);
-    }
+    if (isConfirmed) removerNota(chave);
 }
 
 async function removerNota(chave) {
     const email = localStorage.getItem("user_email");
     try {
-        const r = await fetch(`${API_URL}/historico/${chave}?email=${email}`, {
-            method: "DELETE"
-        });
-
+        const r = await fetch(`${API_URL}/historico/${chave}?email=${email}`, { method: "DELETE" });
         if (r.ok) {
             Swal.fire("Removida!", "A nota foi excluída com sucesso.", "success");
             document.getElementById('res').classList.add('hidden');
             todasAsNotas = todasAsNotas.filter(n => n.chave !== chave);
             renderizarListaPaginada();
-        } else {
-            Swal.fire("Erro", "Não foi possível remover a nota.", "error");
         }
-    } catch (e) {
-        console.error(e);
-        Swal.fire("Erro", "Erro ao conectar com o servidor.", "error");
-    }
+    } catch (e) { console.error(e); }
 }
+
 window.onload = verificarSessao;
