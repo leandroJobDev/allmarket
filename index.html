@@ -61,39 +61,36 @@
 
     <div id="app-content" class="max-w-4xl mx-auto px-6 pb-20 hidden">
 
-        <header class="text-center mb-8 pt-4 px-2">
-            <h1 class="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter mb-2 whitespace-nowrap">
+        <header class="flex flex-col items-center pt-3 md:pt-10 px-4 mb-3 md:mb-12">
+            <h1 class="text-3xl md:text-6xl font-black text-gray-900 tracking-tighter -mb-1 md:mb-2 transition-all">
                 All<span class="text-blue-600">M@rket</span>
             </h1>
 
-            <p
-                class="text-[9px] md:text-xs text-gray-400 font-bold uppercase tracking-[0.15em] md:tracking-[0.3em] mb-6 whitespace-nowrap">
+            <p class="text-[8px] md:text-sm uppercase font-bold text-gray-400 tracking-[0.2em] md:tracking-[0.4em]">
                 Extrair. Escanear. <span class="text-blue-600">Economizar.</span>
             </p>
-
-            <button id="btn-acessar-notas" onclick="carregarHistorico()"
-                class="text-[9px] md:text-[10px] font-black text-blue-600 hover:text-white hover:bg-blue-600 uppercase tracking-widest mx-auto transition-all bg-transparent border-2 border-blue-600 px-6 md:px-8 py-2.5 md:py-3 rounded-full active:scale-95 hidden">
-                📝 Minhas Notas
-            </button>
         </header>
 
-        <div class="bg-white p-6 rounded-2xl shadow-xl mb-8 border border-gray-100">
-            <label class="block text-[10px] font-black text-gray-400 mb-3 uppercase tracking-[0.2em]">Link do QR Code da
-                Nota</label>
-            <div class="flex flex-col md:flex-row gap-3">
-                <input type="text" id="urlNota" placeholder="Cole aqui o link da sua nota fiscal..."
-                    class="flex-1 p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-sm">
+        <div class="w-full max-w-lg mx-auto mb-6 px-4">
 
-                <button onclick="enviarNota()" id="btnProcessar"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-10 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:bg-gray-300 flex items-center justify-center gap-2 uppercase text-xs tracking-widest">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                        stroke="currentColor" class="h-5 w-5">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" />
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M16.875 15.75a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25zM13.5 15.75a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zM15.75 18a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25zM13.5 19.125a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zM18 19.125a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25zM18 14.625a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" />
-                    </svg> Processar Nota
+            <div
+                class="flex items-center bg-white p-1 md:p-1.5 rounded-full border border-gray-200 shadow-lg focus-within:border-blue-400 transition-all">
+
+                <input type="text" id="url-nota" placeholder="Cole o link da nota..."
+                    class="flex-1 bg-transparent border-none outline-none px-4 py-2 text-sm md:text-base text-gray-700 placeholder:text-gray-400 min-w-0">
+
+                <button onclick="processarNota()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white p-2 md:p-3 rounded-full transition-all active:scale-90 flex-shrink-0 shadow-md">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 9h.01M15 9h.01M9 15h.01M15 15h.01" />
+                    </svg>
                 </button>
+
             </div>
         </div>
 
