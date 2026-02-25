@@ -5,7 +5,7 @@
 O **AllM@rket** é uma solução inteligente para gestão de consumo pessoal. Ele automatiza a extração de dados de notas fiscais via QR Code, transformando cupons fiscais complexos em um histórico de compras limpo, detalhado e útil.
 
 <div align="center">
-  <img src="./assets/demo.gif" alt="AllMarket Demo" width="320">
+  <img src="assets/demo.gif" alt="AllMarket Demo" width="320">
 </div>
 
 ---
