@@ -241,4 +241,24 @@ async function confirmarRemocao(chave) {
     }
 }
 
+function alternarSecao(secao) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active', 'bg-white', 'shadow-sm', 'text-blue-600');
+        b.classList.add('text-gray-500');
+    });
+
+    const secaoAtiva = document.getElementById(`secao-${secao}`);
+    if (secaoAtiva) secaoAtiva.classList.remove('hidden');
+
+    const btnAtivo = document.getElementById(`btn-${secao}`);
+    if (btnAtivo) {
+        btnAtivo.classList.add('active', 'bg-white', 'shadow-sm', 'text-blue-600');
+        btnAtivo.classList.remove('text-gray-500');
+    }
+
+    if (secao === 'analise' && typeof window.atualizarGraficos === 'function') {
+        window.atualizarGraficos();
+    }
+}
 window.onload = verificarSessao;

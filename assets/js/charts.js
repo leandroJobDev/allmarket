@@ -3,15 +3,15 @@ let pieChartInstance = null;
 
 const coresApp = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
 
-window.atualizarGraficos = function() {
+window.atualizarGraficos = function () {
     const dashboard = document.getElementById('dashboard');
     const totalDisplay = document.getElementById('total-geral-dashboard');
-    
-    if (!todasAsNotas || todasAsNotas.length === 0) {
-        dashboard?.classList.add('hidden');
+
+    if (typeof todasAsNotas === 'undefined' || todasAsNotas.length === 0) {
+        console.log("Sem notas para exibir no dashboard");
         return;
     }
-    
+
     dashboard?.classList.remove('hidden');
 
     const dadosMensais = {};
@@ -23,7 +23,7 @@ window.atualizarGraficos = function() {
     todasAsNotas.forEach(nota => {
         const dataPartes = nota.data_emissao.split(' ')[0].split('/');
         const mesAno = `${dataPartes[1]}/${dataPartes[2]}`;
-        
+
         somaTotal += nota.valor_total;
         dadosMensais[mesAno] = (dadosMensais[mesAno] || 0) + nota.valor_total;
 
@@ -93,9 +93,9 @@ function renderizarPizza(dados) {
             maintainAspectRatio: false,
             cutout: '75%',
             plugins: {
-                legend: { 
-                    position: 'bottom', 
-                    labels: { usePointStyle: true, padding: 20, font: { size: 11, weight: 'bold' } } 
+                legend: {
+                    position: 'bottom',
+                    labels: { usePointStyle: true, padding: 20, font: { size: 11, weight: 'bold' } }
                 }
             }
         }
