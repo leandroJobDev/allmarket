@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>📝 AllM@rket - Extrair. Escanear. Economizar.</title>
-    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -19,7 +19,7 @@
             class="bg-white border border-gray-100 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl w-full max-w-[380px] text-center">
             <div class="mb-6">
                 <div class="w-16 h-16 flex items-center justify-center mx-auto mb-2">
-                    <img src="assets/favicon.svg" class="w-full h-full object-contain" alt="Ícone AllMarket">
+                    <img src="assets/img/favicon.svg" class="w-full h-full object-contain" alt="Ícone AllMarket">
                 </div>
 
                 <div class="font-black text-gray-900 text-2xl tracking-[ -0.05em] mb-6">
@@ -54,7 +54,7 @@
                 <div id="user-profile"
                     class="hidden flex items-center gap-2 bg-gray-50 p-1 pr-2 rounded-full border border-gray-100 shadow-sm">
                     <img id="user-pic" src="" class="w-7 h-7 rounded-full border border-white"
-                        onerror="this.src='assets/favicon.svg'">
+                        onerror="this.src='assets/img/favicon.svg'">
 
                     <div class="flex flex-col">
                         <span id="user-name-display" class="text-[10px] font-black text-gray-800 leading-none"></span>
@@ -72,7 +72,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <img src="assets/favicon.svg" class="h-6 w-6 opacity-80 object-contain">
+                <img src="assets/img/favicon.svg" class="h-6 w-6 opacity-80 object-contain">
                 <span class="font-black text-gray-900 text-lg tracking-tighter leading-none">
                     All<span class="text-blue-600">M@rket</span>
                 </span>
@@ -83,7 +83,7 @@
     <div id="app-content" class="max-w-4xl mx-auto px-6 pb-20 pt-24 hidden">
         <header class="flex items-center justify-center pt-6 md:pt-12 px-4 mb-4 md:mb-12 text-center gap-3">
             <div class="shrink-0">
-                <img src="assets/favicon.svg" class="h-9 w-9 md:h-14 md:w-14 object-contain drop-shadow-sm">
+                <img src="assets/img/favicon.svg" class="h-9 w-9 md:h-14 md:w-14 object-contain drop-shadow-sm">
             </div>
 
             <h2
@@ -251,7 +251,13 @@
         </tr>
     </template>
 
-    <script src="js/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/main.js"></script>
 </body>
 
 </html>
