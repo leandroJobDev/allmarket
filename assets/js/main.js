@@ -79,15 +79,17 @@ function renderizarListaPaginada() {
     const listaHist = document.getElementById('lista-hist');
     const containerVerMais = document.getElementById('container-ver-mais');
     const secaoHist = document.getElementById('historicoSec');
+    const abas = document.getElementById('abas-navegacao');
     const contador = document.getElementById('contador-notas');
     const template = document.getElementById('template-nota');
 
     if (!listaHist) return;
     listaHist.innerHTML = '';
 
-    if (todasAsNotas.length === 0) {
+    if (!todasAsNotas || todasAsNotas.length === 0) {
         welcomeCard?.classList.remove('hidden');
         secaoHist?.classList.add('hidden');
+        abas?.classList.add('hidden');
         if (contador) contador.innerText = "Nenhuma compra salva";
         if (containerVerMais) containerVerMais.classList.add("hidden");
         return;
@@ -95,35 +97,35 @@ function renderizarListaPaginada() {
 
     welcomeCard?.classList.add('hidden');
     secaoHist?.classList.remove('hidden');
-
-    if (contador) {
-        contador.innerHTML = `<span class="animate-pulse text-blue-500">●</span> ${todasAsNotas.length} ${todasAsNotas.length === 1 ? 'compra salva' : 'compras salvas'}`;
-    }
+    abas?.classList.remove('hidden');
 
     const notasParaExibir = todasAsNotas.slice(0, notasExibidas);
 
-    notasParaExibir.forEach((nota, index) => {
+    notasParaExibir.forEach(nota => {
         const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('div');
+        
+        card.onclick = () => abrirDetalhesNota(nota.chave);
 
-        const nomeLimpo = nota.estabelecimento.nome
-            .replace(removerPalavras, '')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toUpperCase();
-
-        clone.querySelector('.nota-nome').innerText = nomeLimpo || nota.estabelecimento.nome;
-        clone.querySelector('.nota-data').innerText = nota.data_emissao;
-        clone.querySelector('.nota-valor').innerText = formatarMoeda(nota.valor_total);
+        const nomeLimpo = nota.estabelecimento.nome.replace(removerPalavras, '').trim();
+        clone.querySelector('.nota-nome').innerText = nomeLimpo || "Estabelecimento";
+        clone.querySelector('.nota-data').innerText = nota.data_emissao.split(' ')[0];
+        clone.querySelector('.nota-valor').innerText = nota.valor_total.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
         clone.querySelector('.nota-itens').innerText = `${nota.itens.length} itens`;
-
-        const cardDiv = clone.querySelector('div');
-        cardDiv.onclick = () => exibirDetalhesDoObjeto(index);
 
         listaHist.appendChild(clone);
     });
 
+    if (contador) {
+        contador.innerText = `${todasAsNotas.length} ${todasAsNotas.length === 1 ? 'nota encontrada' : 'notas encontradas'}`;
+    }
+
     if (containerVerMais) {
-        containerVerMais.classList.toggle("hidden", todasAsNotas.length <= notasExibidas);
+        if (todasAsNotas.length > notasExibidas) {
+            containerVerMais.classList.remove('hidden');
+        } else {
+            containerVerMais.classList.add('hidden');
+        }
     }
 }
 

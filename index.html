@@ -30,19 +30,29 @@
         <div
             class="bg-white border border-gray-100 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl w-full max-w-[380px] text-center">
             <div class="mb-6">
-                <div class="w-16 h-16 flex items-center justify-center mx-auto mb-2">
+                <div class="w-16 h-16 flex items-center justify-center mx-auto mb-4">
                     <img src="assets/img/favicon.svg" class="w-full h-full object-contain" alt="Ícone AllMarket">
                 </div>
-                <div class="font-black text-gray-900 text-2xl tracking-tighter mb-6">
+
+                <div class="font-black text-gray-900 text-2xl tracking-tighter mb-2">
                     All<span class="text-blue-600">M@rket</span>
                 </div>
-                <h3 class="text-2xl font-black text-gray-900 leading-tight mb-8 uppercase tracking-tighter">
+
+                <h3 class="text-xl font-black text-gray-800 leading-tight mb-6 uppercase tracking-tighter">
                     Extraia. Escaneie. <br> <span class="text-blue-600">Economize.</span>
                 </h3>
-                <div id="google-btn-container" class="flex justify-center min-h-[50px] mb-8"></div>
+
+                <p class="text-gray-500 font-medium px-4 text-sm leading-relaxed max-w-[320px] mx-auto mb-8">
+                    <span class="text-blue-500">✨</span> Conecte sua conta e deixe nossa <br>
+                    <span class="text-gray-900 font-black tracking-tight italic">inteligência transformar</span> suas
+                    notas <br>
+                    em <span class="text-blue-600 font-black">Economia de verdade.</span>
+                </p>
+
+                <div id="google-btn-container" class="flex justify-center min-h-[50px] mb-4"></div>
             </div>
         </div>
-        <div class="mt-8 text-[10px] text-gray-400 font-black tracking-[0.2em]">&copy; 2026 AllM@rket</div>
+        <div class="mt-8 text-[10px] text-gray-400 font-black tracking-[0.2em] uppercase">&copy; 2026 AllM@rket</div>
     </div>
 
     <nav id="main-nav"
@@ -71,7 +81,6 @@
     </nav>
 
     <div id="app-content" class="max-w-xl md:max-w-4xl mx-auto px-4 pb-20 pt-16 md:pt-24 hidden">
-
         <header class="flex items-center justify-center mb-6 md:mb-10 text-center gap-3 md:gap-6">
             <img src="assets/img/favicon.svg" class="h-10 w-10 md:h-16 md:w-16 object-contain">
             <h2
@@ -98,7 +107,7 @@
             </div>
         </div>
 
-        <div class="flex bg-gray-200/50 p-1 md:p-1.5 rounded-full mb-6 md:mb-12">
+        <div id="abas-navegacao" class="flex bg-gray-200/50 p-1 md:p-1.5 rounded-full mb-6 md:mb-12">
             <button onclick="alternarSecao('historico')" id="btn-historico"
                 class="tab-btn active flex-1 flex items-center justify-center gap-2 md:gap-4 py-2.5 md:py-4 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest transition-all">
                 <span class="text-base md:text-xl">📋</span> <span>Notas</span>
@@ -157,35 +166,80 @@
             </div>
         </div>
 
-        <template id="template-nota">
-            <div
-                class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm active:scale-95 transition-all cursor-pointer flex justify-between items-center group">
-                <div class="flex-1 truncate uppercase text-left">
-                    <h4 class="nota-nome font-black text-gray-800 text-[13px] truncate group-hover:text-blue-600"></h4>
-                    <p class="nota-data text-[10px] text-gray-400 font-bold"></p>
+        <div id="welcome-card"
+            class="hidden bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-2xl shadow-gray-200/50 text-center max-w-sm mx-auto my-10 animate-in fade-in zoom-in duration-500">
+
+            <h2 class="text-2xl font-black text-gray-900 mb-2 tracking-tighter leading-tight">
+                Seu <span class="text-blue-600">AllM@rket</span> <br> está pronto
+            </h2>
+
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-8">
+                Inteligência que gera <span class="text-blue-600">Economia</span>
+            </p>
+
+            <div class="space-y-6 text-left px-2">
+                <div class="flex gap-4">
+                    <span class="text-blue-600 font-black text-lg leading-none">01</span>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        <strong
+                            class="text-gray-900 font-black uppercase text-[10px] tracking-widest block mb-1">Extraia</strong>
+                        Cole o link acima e deixe o <span class="text-gray-900 font-bold">processamento</span> por nossa
+                        conta.
+                    </p>
                 </div>
-                <div class="text-right ml-4">
-                    <span class="nota-valor block text-blue-600 font-black text-base"></span>
-                    <span class="nota-itens text-[8px] text-gray-400 uppercase font-bold"></span>
+
+                <div class="flex gap-4">
+                    <span class="text-blue-600 font-black text-lg leading-none">02</span>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        <strong
+                            class="text-gray-900 font-black uppercase text-[10px] tracking-widest block mb-1">Escaneie</strong>
+                        Sincronizamos itens e valores de forma <span class="text-gray-900 font-bold">automática</span> e
+                        precisa.
+                    </p>
+                </div>
+
+                <div class="flex gap-4">
+                    <span class="text-blue-600 font-black text-lg leading-none">03</span>
+                    <p class="text-xs text-gray-500 leading-relaxed">
+                        <strong
+                            class="text-blue-600 font-black text-[10px] tracking-widest block mb-1">Economize</strong>
+                        Transforme dados brutos em <span class="text-blue-600 font-bold">economia real</span> para o seu
+                        bolso.
+                    </p>
                 </div>
             </div>
-        </template>
+        </div>
+    </div>
 
-        <template id="template-item-nota">
-            <tr class="hover:bg-gray-50 border-b border-gray-50 italic">
-                <td class="p-4 text-sm uppercase">
-                    <span class="item-nome block font-black text-gray-800"></span>
-                    <span class="item-detalhes text-[10px] text-gray-400 font-bold"></span>
-                </td>
-                <td class="item-valor p-4 text-right font-black text-blue-600"></td>
-            </tr>
-        </template>
+    <template id="template-nota">
+        <div
+            class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm active:scale-95 transition-all cursor-pointer flex justify-between items-center group">
+            <div class="flex-1 truncate uppercase text-left">
+                <h4 class="nota-nome font-black text-gray-800 text-[13px] truncate group-hover:text-blue-600"></h4>
+                <p class="nota-data text-[10px] text-gray-400 font-bold"></p>
+            </div>
+            <div class="text-right ml-4">
+                <span class="nota-valor block text-blue-600 font-black text-base"></span>
+                <span class="nota-itens text-[8px] text-gray-400 uppercase font-bold"></span>
+            </div>
+        </div>
+    </template>
 
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="assets/js/api.js"></script>
-        <script src="assets/js/auth.js"></script>
-        <script src="assets/js/charts.js"></script>
-        <script src="assets/js/main.js"></script>
+    <template id="template-item-nota">
+        <tr class="hover:bg-gray-50 border-b border-gray-50 italic">
+            <td class="p-4 text-sm uppercase">
+                <span class="item-nome block font-black text-gray-800"></span>
+                <span class="item-detalhes text-[10px] text-gray-400 font-bold"></span>
+            </td>
+            <td class="item-valor p-4 text-right font-black text-blue-600"></td>
+        </tr>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/main.js"></script>
 </body>
 
 </html>
