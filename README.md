@@ -1,5 +1,4 @@
-# AllM@rket <img src="./assets/favicon.svg" width="32" height="32" align="center">
-
+# <img src="./assets/favicon.svg" width="32" height="32" align="center"> AllM@rket 
 > **Extraia • Escaneie • Economize**
 
 O **AllM@rket** é uma solução inteligente para gestão de consumo pessoal. Ele automatiza a extração de dados de notas fiscais via QR Code, transformando cupons fiscais complexos em um histórico de compras limpo, detalhado e útil.
