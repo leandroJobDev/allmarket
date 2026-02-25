@@ -155,7 +155,39 @@
                 </div>
             </div>
         </div>
+        <section id="dashboard" class="hidden mb-10 animate-in fade-in zoom-in duration-700">
+            <div class="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-xl">
+                <h2 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6 text-center">
+                    Análise de <span class="text-blue-600">Consumo</span>
+                </h2>
 
+                <div class="flex justify-center mb-8">
+                    <div class="bg-blue-50 border border-blue-100 rounded-3xl px-8 py-4 text-center">
+                        <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-1">Volume
+                            Total de Compras</span>
+                        <span id="total-geral-dashboard" class="text-2xl font-black text-blue-700">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="flex flex-col items-center">
+                        <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4 italic">Histórico
+                            Mensal</h3>
+                        <div class="w-full h-[200px]">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center">
+                        <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4 italic">
+                            Distribuição por Estabelecimento</h3>
+                        <div class="w-full h-[200px]">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
         <div id="historicoSec" class="hidden mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
                 <div class="flex items-center justify-between mb-6">

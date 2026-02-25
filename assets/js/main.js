@@ -1,3 +1,6 @@
+var removerPalavras = /SUPERMERCADOS?|MERCADOS?|ATACADISTA|COMERCIO|LTDA|S\/A/gi;
+var notasExibidas = 8;
+
 function verificarSessao() {
     const email = localStorage.getItem("user_email");
     const name = localStorage.getItem("user_name");
@@ -51,7 +54,7 @@ async function enviarNota() {
         if (r.ok || r.status === 409) {
             const nota = data.nota || data;
             renderizarNota(nota);
-            
+
             if (r.status !== 409 && !todasAsNotas.some(n => n.chave === nota.chave)) {
                 todasAsNotas.unshift(nota);
                 renderizarListaPaginada();
@@ -101,13 +104,21 @@ function renderizarListaPaginada() {
 
     notasParaExibir.forEach((nota, index) => {
         const clone = template.content.cloneNode(true);
-        clone.querySelector('.nota-nome').innerText = nota.estabelecimento.nome;
+
+        const nomeLimpo = nota.estabelecimento.nome
+            .replace(removerPalavras, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toUpperCase();
+
+        clone.querySelector('.nota-nome').innerText = nomeLimpo || nota.estabelecimento.nome;
         clone.querySelector('.nota-data').innerText = nota.data_emissao;
         clone.querySelector('.nota-valor').innerText = formatarMoeda(nota.valor_total);
         clone.querySelector('.nota-itens').innerText = `${nota.itens.length} itens`;
 
         const cardDiv = clone.querySelector('div');
         cardDiv.onclick = () => exibirDetalhesDoObjeto(index);
+
         listaHist.appendChild(clone);
     });
 
@@ -124,7 +135,14 @@ function renderizarNota(nota) {
     if (!resDiv || !nota || !templateItem) return;
 
     resDiv.classList.remove("hidden");
-    document.getElementById("loja").innerText = nota.estabelecimento.nome;
+
+    const nomeLimpoDestaque = nota.estabelecimento.nome
+        .replace(removerPalavras, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toUpperCase();
+
+    document.getElementById("loja").innerText = nomeLimpoDestaque;
     document.getElementById("estEndereco").innerText = nota.estabelecimento.endereco;
     document.getElementById("info-nota").innerText = `Nº ${nota.numero} | EMISSÃO: ${nota.data_emissao}`;
 
@@ -134,9 +152,14 @@ function renderizarNota(nota) {
     tbody.innerHTML = "";
     nota.itens.forEach(i => {
         const clone = templateItem.content.cloneNode(true);
+
+        let qtdOriginal = parseFloat(i.quantidade);
+        let qtdCorrigida = (qtdOriginal === 0.1) ? 1.0 : qtdOriginal;
+
         clone.querySelector('.item-nome').innerText = i.nome;
-        clone.querySelector('.item-detalhes').innerText = `QTD: ${i.quantidade} | UNIT: ${formatarMoeda(i.preco_unitario)}`;
+        clone.querySelector('.item-detalhes').innerText = `QTD: ${qtdCorrigida.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 })} | UNIT: ${formatarMoeda(i.preco_unitario)}`;
         clone.querySelector('.item-valor').innerText = formatarMoeda(i.preco_total || i.valor_total);
+        
         tbody.appendChild(clone);
     });
 
@@ -164,7 +187,14 @@ function filtrarHistorico() {
 
     notasFiltradas.slice(0, notasExibidas).forEach((nota) => {
         const clone = template.content.cloneNode(true);
-        clone.querySelector('.nota-nome').innerText = nota.estabelecimento.nome;
+
+        const nomeLimpoBusca = nota.estabelecimento.nome
+            .replace(removerPalavras, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toUpperCase();
+
+        clone.querySelector('.nota-nome').innerText = nomeLimpoBusca || nota.estabelecimento.nome;
         clone.querySelector('.nota-data').innerText = nota.data_emissao;
         clone.querySelector('.nota-valor').innerText = formatarMoeda(nota.valor_total);
         clone.querySelector('.nota-itens').innerText = `${nota.itens.length} itens`;
@@ -180,7 +210,7 @@ function exibirDetalhesDoObjeto(index) {
 }
 
 function mostrarMaisNotas() {
-    notasExibidas += 4;
+    notasExibidas += 8;
     renderizarListaPaginada();
 }
 
@@ -195,7 +225,7 @@ async function confirmarRemocao(chave) {
         confirmButtonText: 'Sim, remover',
         cancelButtonText: 'Cancelar'
     });
-    
+
     if (isConfirmed) {
         const email = localStorage.getItem("user_email");
         try {
