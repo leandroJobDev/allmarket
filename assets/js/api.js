@@ -1,9 +1,6 @@
 const isLocal = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
 const API_URL = isLocal ? "http://127.0.0.1:8080" : "https://allmarket-api.onrender.com";
 
-let todasAsNotas = [];
-let notasExibidas = 8;
-
 const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 async function carregarHistorico() {
