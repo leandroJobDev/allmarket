@@ -94,3 +94,54 @@ body {
         padding-bottom: 80px;
     }
 }
+@media (max-width: 767px) {
+    /* Ajusta o Nav para não esmagar os itens */
+    #bottom-nav .flex {
+        justify-content: space-around;
+        gap: 4px;
+        padding: 0 8px;
+    }
+
+    /* Diminui um pouco o texto para caber tudo */
+    .nav-item span {
+        font-size: 9px !important;
+        letter-spacing: -0.02em;
+    }
+
+    /* Ajuste para o botão (+) da lista não fugir da tela */
+    #secao-lista .flex.gap-2 {
+        flex-wrap: nowrap;
+    }
+    
+    #input-lista {
+        width: 100%; /* Garante que o input empurre o botão, mas não saia da tela */
+    }
+}
+/* Quando a checkbox estiver marcada, risca o texto ao lado */
+.item-checkbox:checked + .item-texto {
+    text-decoration: line-through;
+    opacity: 0.5;
+    color: #9ca3af;
+}
+
+/* Animação suave para novos itens */
+.animate-fade-in {
+    animation: fadeInItem 0.4s ease-out forwards;
+}
+
+@keyframes fadeInItem {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.custom-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
