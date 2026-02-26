@@ -105,7 +105,7 @@ function renderizarListaPaginada() {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('div');
         
-        card.onclick = () => abrirDetalhesNota(nota.chave);
+        card.onclick = () => renderizarNota(nota);
 
         const nomeLimpo = nota.estabelecimento.nome.replace(removerPalavras, '').trim();
         clone.querySelector('.nota-nome').innerText = nomeLimpo || "Estabelecimento";
