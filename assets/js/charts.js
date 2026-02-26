@@ -8,7 +8,6 @@ window.atualizarGraficos = function () {
     const totalDisplay = document.getElementById('total-geral-dashboard');
 
     if (typeof todasAsNotas === 'undefined' || todasAsNotas.length === 0) {
-        console.log("Sem notas para exibir no dashboard");
         return;
     }
 

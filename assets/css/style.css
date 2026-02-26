@@ -1,55 +1,50 @@
-:root {
-    --primary-color: #0d6efd;
+/* Estilo das Abas Ativas */
+.tab-btn.active {
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    color: #2563eb !important;
 }
 
-body {
-    background-color: #f0f2f5;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+/* Transições de Conteúdo */
+.tab-content {
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.navbar {
-    background: white;
-    border-bottom: 1px solid #e0e0e0;
+.tab-content.hidden {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
 }
 
-.card {
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+/* Efeito de Vidro na Navegação (Mobile e Desktop) */
+#main-nav {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
-#login-gate {
-    display: flex;
-    min-height: 80vh;
-    align-items: center;
-    justify-content: center;
+/* Ajustes Mobile para Ícones */
+@media (max-width: 768px) {
+    .tab-btn i {
+        font-size: 1.25rem;
+    }
+    
+    /* Barra de navegação fixa no rodapé para Mobile (Opcional) */
+    /* Se quiser a barra embaixo no celular, descomente o bloco abaixo */
+    /*
+    #abas-navegacao {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        z-index: 40;
+        margin-bottom: 0;
+        background-color: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    }
+    */
 }
 
-.nav-pills .nav-link {
-    border-radius: 10px;
-    font-weight: 500;
-    color: #666;
-    margin: 0 5px;
-}
-
-.nav-pills .nav-link.active {
-    background-color: var(--primary-color);
-}
-
-.history-card {
-    transition: transform 0.2s;
-    cursor: pointer;
-}
-
-.history-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-}
-
-.user-badge {
-    background: #e9ecef;
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 600;
+/* Melhoria no scroll suave do detalhamento da nota */
+#res {
+    scroll-margin-top: 5rem;
 }
