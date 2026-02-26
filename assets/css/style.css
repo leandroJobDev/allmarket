@@ -1,50 +1,96 @@
-/* Estilo das Abas Ativas */
 .tab-btn.active {
     background-color: white;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     color: #2563eb !important;
 }
 
-/* Transições de Conteúdo */
 .tab-content {
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.tab-content.hidden {
-    display: none;
-    opacity: 0;
-    transform: translateY(10px);
-}
-
-/* Efeito de Vidro na Navegação (Mobile e Desktop) */
 #main-nav {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
 
-/* Ajustes Mobile para Ícones */
 @media (max-width: 768px) {
     .tab-btn i {
         font-size: 1.25rem;
     }
-    
-    /* Barra de navegação fixa no rodapé para Mobile (Opcional) */
-    /* Se quiser a barra embaixo no celular, descomente o bloco abaixo */
-    /*
-    #abas-navegacao {
-        position: fixed;
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
-        z-index: 40;
-        margin-bottom: 0;
-        background-color: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-    }
-    */
 }
 
-/* Melhoria no scroll suave do detalhamento da nota */
 #res {
     scroll-margin-top: 5rem;
+}
+
+.overflow-hidden.border.border-gray-100 {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    min-width: 300px; 
+}
+
+#res > div {
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .tab-btn i {
+        font-size: 1.25rem;
+    }
+    .tab-btn span:not(.text-base) {
+        display: none;
+    }
+}
+
+/* Esconder Nav Superior no Mobile e mostrar no Desktop */
+#main-nav {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    #main-nav {
+        display: block;
+    }
+    #bottom-nav {
+        display: none;
+    }
+}
+
+/* Ajuste do corpo para não ser cortado pela barra fixa */
+body {
+    padding-bottom: 5rem; /* Espaço para a barra inferior no mobile */
+}
+
+@media (min-width: 768px) {
+    body {
+        padding-bottom: 0;
+    }
+}
+
+/* Estética da Tab Bar */
+#bottom-nav {
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Safe Area para iPhones novos (com notch embaixo) */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Esconde o container de abas original no mobile */
+@media (max-width: 767px) {
+    #abas-navegacao, 
+    .tab-container { 
+        display: none !important; 
+    }
+    
+    /* Garante que as seções tenham respiro por causa do nav inferior */
+    .tab-content {
+        padding-bottom: 80px;
+    }
 }

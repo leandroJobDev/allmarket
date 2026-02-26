@@ -50,7 +50,7 @@ func main() {
 	router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin, Accept")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
@@ -59,36 +59,19 @@ func main() {
 		c.Next()
 	})
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "AllMarket API Online"})
-	})
-
-	router.POST("/auth/google", func(c *gin.Context) {
-		var req RequisicaoLogin
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(400, gin.H{"error": "Token ausente"})
-			return
-		}
-		c.JSON(200, gin.H{"status": "ok"})
-	})
-
 	router.GET("/historico", func(c *gin.Context) {
 		email := c.Query("email")
 		if email == "" {
-			c.JSON(400, gin.H{"error": "E-mail obrigatório"})
+			c.JSON(400, gin.H{"error": "E-mail é obrigatório"})
 			return
 		}
 
-		notas, err := repo.ListarPorEmail(email)
+		notas, err := repo.ListarPorEmail(strings.ToLower(email))
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Erro ao buscar histórico"})
 			return
 		}
 
-		if notas == nil {
-			c.JSON(200, []interface{}{})
-			return
-		}
 		c.JSON(200, notas)
 	})
 
@@ -129,31 +112,31 @@ func main() {
 			return
 		}
 
+		if nota.Chave == "" {
+			c.JSON(422, gin.H{"error": "Não foi possível extrair os dados desta URL. Verifique se é uma nota válida."})
+			return
+		}
+
 		userEmail := strings.ToLower(req.Email)
 		nota.UsuarioEmail = userEmail
 
 		err = repo.Salvar(nota)
 
 		if err != nil {
-			if mongo.IsDuplicateKeyError(err) || strings.Contains(err.Error(), "E11000") {
-				notaExistente, errBusca := repo.BuscarPorChave(nota.Chave)
-				if errBusca == nil {
-					if notaExistente.UsuarioEmail != userEmail {
-						notaExistente.UsuarioEmail = userEmail
-						_ = repo.Salvar(notaExistente)
-					}
-					c.JSON(409, notaExistente)
-					return
-				}
-				c.JSON(409, nota)
+			if mongo.IsDuplicateKeyError(err) {
+				c.JSON(409, gin.H{
+					"error": "Nota já cadastrada",
+					"nota":  nota,
+				})
 				return
 			}
-			c.JSON(500, gin.H{"error": "Erro ao salvar: " + err.Error()})
+			c.JSON(500, gin.H{"error": "Erro ao salvar no banco"})
 			return
 		}
 
-		c.JSON(200, nota)
+		c.JSON(201, nota)
 	})
 
+	fmt.Printf("🚀 Servidor rodando na porta %s\n", port)
 	router.Run(":" + port)
 }
