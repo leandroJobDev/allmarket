@@ -3,7 +3,6 @@ window.notasExibidas = 8;
 
 window.alternarSecao = (secao) => {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    
     document.getElementById('res')?.classList.add('hidden');
 
     document.querySelectorAll('.tab-btn').forEach(b => {
@@ -11,20 +10,31 @@ window.alternarSecao = (secao) => {
         b.classList.add('text-gray-500');
     });
 
+    document.querySelectorAll('.nav-item').forEach(b => {
+        b.classList.remove('text-blue-600');
+        b.classList.add('text-gray-500');
+    });
+
     const secaoAtiva = document.getElementById(`secao-${secao}`);
     if (secaoAtiva) secaoAtiva.classList.remove('hidden');
 
-    const btnAtivo = document.getElementById(`btn-${secao}`);
-    if (btnAtivo) {
-        btnAtivo.classList.add('active', 'bg-white', 'shadow-sm', 'text-blue-600');
-        btnAtivo.classList.remove('text-gray-500');
+    // 5. Ativa Botão DESKTOP (Adiciona fundo branco e sombra)
+    const btnDesktop = document.getElementById(`btn-${secao}`);
+    if (btnDesktop) {
+        btnDesktop.classList.add('active', 'bg-white', 'shadow-sm', 'text-blue-600');
+        btnDesktop.classList.remove('text-gray-500');
+    }
+
+    const btnMobile = document.getElementById(`btn-nav-${secao}`);
+    if (btnMobile) {
+        btnMobile.classList.add('text-blue-600');
+        btnMobile.classList.remove('text-gray-500');
     }
 
     document.getElementById("dropdown-perfil")?.classList.add("hidden");
 
-    if (secao === 'historico' && window.renderizarListaPaginada) {
-        window.renderizarListaPaginada();
-    }
+    if (secao === 'historico') window.renderizarListaPaginada();
+    if (secao === 'analise' && window.atualizarGraficos) window.atualizarGraficos();
 };
 
 window.filtrarHistorico = () => {

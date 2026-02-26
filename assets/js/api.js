@@ -9,16 +9,19 @@ window.carregarHistorico = async () => {
     try {
         const response = await fetch(`${window.API_URL}/historico?email=${email}`);
         if (!response.ok) throw new Error("Erro ao carregar dados");
-        
+
         let notas = await response.json();
-        
+
         window.todasAsNotas = Array.isArray(notas) ? notas.filter(n => n.chave && n.chave !== "") : [];
-        
+
         const welcomeCard = document.getElementById("welcome-card");
         const abasNavegacao = document.getElementById("abas-navegacao");
         const historicoSec = document.getElementById("historicoSec");
 
         if (window.todasAsNotas.length > 0) {
+            document.getElementById("welcome-card")?.classList.add("hidden");
+            document.getElementById("abas-navegacao")?.classList.remove("hidden");
+            document.getElementById("historicoSec")?.classList.remove("hidden");
             window.todasAsNotas.sort((a, b) => {
                 const parse = (s) => {
                     if (!s) return 0;
@@ -28,7 +31,7 @@ window.carregarHistorico = async () => {
                 };
                 return parse(b.data_emissao) - parse(a.data_emissao);
             });
-            
+
             welcomeCard?.classList.add("hidden");
             abasNavegacao?.classList.remove("hidden");
             historicoSec?.classList.remove("hidden");
@@ -39,8 +42,8 @@ window.carregarHistorico = async () => {
         }
 
         if (window.renderizarListaPaginada) window.renderizarListaPaginada();
-        if (window.atualizarGraficos) window.atualizarGraficos(); 
-        
+        if (window.atualizarGraficos) window.atualizarGraficos();
+
     } catch (e) {
         console.error(e);
         document.getElementById("welcome-card")?.classList.remove("hidden");
@@ -100,7 +103,7 @@ window.enviarNota = async () => {
                 if (window.atualizarGraficos) window.atualizarGraficos();
                 Swal.fire("Sucesso!", "Nota importada com sucesso.", "success");
             }
-            
+
             urlInput.value = "";
         } else {
             throw new Error(data.error || "Erro ao processar nota.");
