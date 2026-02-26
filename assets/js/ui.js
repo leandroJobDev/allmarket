@@ -2,39 +2,18 @@ window.removerPalavras = /SUPERMERCADOS?|MERCADOS?|ATACADISTA|COMERCIO|LTDA|S\/A
 window.notasExibidas = 8;
 
 window.alternarSecao = (secao) => {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    document.getElementById('res')?.classList.add('hidden');
-
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('active', 'bg-white', 'shadow-sm', 'text-blue-600');
-        b.classList.add('text-gray-500');
-    });
-
-    document.querySelectorAll('.nav-item').forEach(b => {
-        b.classList.remove('text-blue-600');
-        b.classList.add('text-gray-500');
-    });
-
+    document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+    
     const secaoAtiva = document.getElementById(`secao-${secao}`);
-    if (secaoAtiva) secaoAtiva.classList.remove('hidden');
-
-    // 5. Ativa Botão DESKTOP (Adiciona fundo branco e sombra)
-    const btnDesktop = document.getElementById(`btn-${secao}`);
-    if (btnDesktop) {
-        btnDesktop.classList.add('active', 'bg-white', 'shadow-sm', 'text-blue-600');
-        btnDesktop.classList.remove('text-gray-500');
+    if (secaoAtiva) {
+        secaoAtiva.classList.remove('hidden');
     }
 
-    const btnMobile = document.getElementById(`btn-nav-${secao}`);
-    if (btnMobile) {
-        btnMobile.classList.add('text-blue-600');
-        btnMobile.classList.remove('text-gray-500');
+    if (secao === 'lista') {
+        if (typeof window.gerarSugestoesDeCompras === 'function') {
+            window.gerarSugestoesDeCompras();
+        }
     }
-
-    document.getElementById("dropdown-perfil")?.classList.add("hidden");
-
-    if (secao === 'historico') window.renderizarListaPaginada();
-    if (secao === 'analise' && window.atualizarGraficos) window.atualizarGraficos();
 };
 
 window.filtrarHistorico = () => {
@@ -113,4 +92,144 @@ window.renderizarNota = (nota) => {
         }
     }
     resDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.adicionarItemLista = () => {
+    const input = document.getElementById('input-lista');
+    const container = document.getElementById('lista-compras-container');
+    const template = document.getElementById('template-item-lista');
+    const listaVazia = document.getElementById('lista-vazia');
+
+    const texto = input.value.trim();
+
+    if (texto === "") {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Oops...',
+            text: 'Digite algo para comprar!',
+            confirmButtonColor: '#2563eb'
+        });
+        return;
+    }
+
+    if (listaVazia) listaVazia.classList.add('hidden');
+
+    const novoItem = template.content.cloneNode(true);
+
+    novoItem.querySelector('.item-texto').innerText = texto;
+
+    novoItem.querySelector('.btn-remover-item').onclick = function(e) {
+        e.target.closest('li').remove();
+        if (container.children.length === 0) {
+            listaVazia.classList.remove('hidden');
+        }
+        atualizarContadorLista();
+    };
+
+    container.prepend(novoItem);
+
+    input.value = "";
+    input.focus();
+    atualizarContadorLista();
+};
+
+function atualizarContadorLista() {
+    const total = document.querySelectorAll('#lista-compras-container li').length;
+    const contador = document.getElementById('contador-lista');
+    if (contador) contador.innerText = `${total} ${total === 1 ? 'item' : 'itens'}`;
+}
+document.getElementById('input-lista')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        window.adicionarItemLista();
+    }
+});
+
+window.gerarSugestoesDeCompras = (filtroMercado = 'TODOS') => {
+    const containerItens = document.getElementById('sugestoes-container');
+    const containerMercados = document.getElementById('filtro-mercados-container');
+    
+    if (!window.todasAsNotas || window.todasAsNotas.length === 0) {
+        if (containerMercados) containerMercados.innerHTML = '<span class="text-[10px] p-2 text-gray-400">Carregando notas...</span>';
+        return;
+    }
+
+    let contagemItens = {};
+    let mercadosEncontrados = new Set();
+
+    window.todasAsNotas.forEach((nota) => {
+        let nomeLoja = "OUTROS";
+        
+        if (nota.estabelecimento && nota.estabelecimento.nome) {
+            nomeLoja = nota.estabelecimento.nome.toUpperCase().trim();
+        } else if (nota.loja) {
+            nomeLoja = nota.loja.toUpperCase().trim();
+        }
+        
+        mercadosEncontrados.add(nomeLoja);
+
+        if (filtroMercado === 'TODOS' || filtroMercado === nomeLoja) {
+            if (nota.itens && Array.isArray(nota.itens)) {
+                nota.itens.forEach(item => {
+                    const nomeItem = (item.nome || "ITEM").toUpperCase().trim();
+                    contagemItens[nomeItem] = (contagemItens[nomeItem] || 0) + 1;
+                });
+            }
+        }
+    });
+
+    if (containerMercados) {
+        containerMercados.innerHTML = '';
+        const listaMercados = ['TODOS', ...Array.from(mercadosEncontrados).sort()];
+
+        listaMercados.forEach(loja => {
+            const btn = document.createElement('button');
+            const isActive = filtroMercado === loja;
+            
+            btn.className = `btn-filtro-mercado text-[10px] font-black px-4 py-2 rounded-full whitespace-nowrap transition-all flex-shrink-0 ${
+                isActive ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200'
+            }`;
+            
+            btn.innerText = loja;
+            btn.onclick = () => window.gerarSugestoesDeCompras(loja);
+            containerMercados.appendChild(btn);
+        });
+    }
+
+    if (containerItens) {
+        containerItens.innerHTML = '';
+        const ordenados = Object.keys(contagemItens)
+            .sort((a, b) => contagemItens[b] - contagemItens[a])
+            .slice(0, 30);
+
+        if (ordenados.length === 0) {
+            containerItens.innerHTML = '<div class="text-center py-10 text-gray-400 text-[10px] font-bold">Nenhum item encontrado</div>';
+            return;
+        }
+
+        ordenados.forEach(nome => {
+            const btn = document.createElement('button');
+            btn.className = "flex items-center justify-between w-full bg-gray-50 hover:bg-blue-50 border border-gray-100 p-3 rounded-xl mb-1 active:scale-[0.98] transition-all";
+            
+            btn.innerHTML = `
+                <div class="flex items-center gap-3 overflow-hidden pointer-events-none">
+                    <div class="w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0">
+                        <i class="fa-solid fa-plus text-blue-600 text-[10px]"></i>
+                    </div>
+                    <span class="text-[11px] font-bold text-gray-700 uppercase truncate text-left">${nome}</span>
+                </div>
+                <span class="text-[9px] font-black text-gray-400 bg-white px-2 py-1 rounded-md border border-gray-50 flex-shrink-0 ml-2">${contagemItens[nome]}x</span>
+            `;
+            
+            btn.onclick = () => {
+                const input = document.getElementById('input-lista');
+                if (input) {
+                    input.value = nome;
+                    window.adicionarItemLista();
+                    btn.classList.add('bg-green-100', 'border-green-300');
+                    setTimeout(() => btn.classList.remove('bg-green-100', 'border-green-300'), 300);
+                }
+            };
+            containerItens.appendChild(btn);
+        });
+    }
 };
